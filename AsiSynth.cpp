@@ -1,5 +1,5 @@
 #include "I_JackHandler.h"
-#include "EchoHandler.h"
+#include "Factory.h"
 
 #include <iostream>
 #include <vector>
@@ -53,7 +53,7 @@ namespace
 
 }
 
-int main(int narg, char **args)
+int main(int argc, char **args)
 {
 
   jack_client_t * client = jack_client_open ("AsiSynth", JackNullOption, NULL);
@@ -66,7 +66,7 @@ int main(int narg, char **args)
 
   std::vector<std::shared_ptr<ASI::I_JackHandler> > handlers;
 
-  handlers.push_back(std::make_shared<ASI::EchoHandler>(client, 1.0));
+  ASI::createHandlers(argc, args, client, handlers);
 
   jack_set_process_callback(client, process, &handlers);
 
