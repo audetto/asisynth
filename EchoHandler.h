@@ -1,6 +1,7 @@
 #pragma once
 
 #include "I_JackHandler.h"
+#include "MidiEvent.h"
 
 #include <jack/midiport.h>
 #include <list>
@@ -15,25 +16,19 @@ namespace ASI
   {
   public:
 
-    EchoHandler(jack_client_t * client, double lagSeconds);
+    EchoHandler(jack_client_t * client, const double lagSeconds, const int offset);
 
-    virtual int process(jack_nframes_t nframes);
+    virtual int process(const jack_nframes_t nframes);
 
-    virtual int sampleRate(jack_nframes_t nframes);
+    virtual int sampleRate(const jack_nframes_t nframes);
 
     virtual void shutdown();
 
   private:
 
-    struct MidiEvent
-    {
-      MidiEvent(const jack_midi_data_t * data, const jack_nframes_t time);
-      jack_nframes_t m_time;
-      jack_midi_data_t m_data[3];
-    };
-
     jack_client_t *m_client;
     const double m_lagSeconds;
+    const int m_offset;
 
     jack_nframes_t m_lagFrames;
     jack_port_t *m_inputPort;

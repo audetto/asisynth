@@ -66,7 +66,10 @@ int main(int argc, char **args)
 
   std::vector<std::shared_ptr<ASI::I_JackHandler> > handlers;
 
-  ASI::createHandlers(argc, args, client, handlers);
+  if (!ASI::createHandlers(argc, args, client, handlers))
+  {
+    return 3;
+  }
 
   jack_set_process_callback(client, process, &handlers);
 

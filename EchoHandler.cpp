@@ -1,25 +1,40 @@
 #include "EchoHandler.h"
 
+namespace
+{
+  ASI::MidiEvent createNewMidiEvent(const jack_nframes_t time, const jack_midi_event_t & org, const int offset)
+  {
+    int note = org.buffer[1];
+
+    note += offset;
+
+    while (note < 0)
+    {
+      note += 12; // 1 octave
+    }
+    while (note >= 128)
+    {
+      note -= 12; // 1 octave
+    }
+
+    const jack_midi_data_t cmd = org.buffer[0];
+    const jack_midi_data_t velocity = org.buffer[2];
+
+    return ASI::MidiEvent(time, cmd, note, velocity);
+  }
+}
+
 namespace ASI
 {
 
-  EchoHandler::MidiEvent::MidiEvent(const jack_midi_data_t * data, const jack_nframes_t time)
-    : m_time(time)
-  {
-    m_data[0] = (data[0] & 0xf0) + 3;   // cmd
-
-    m_data[1] = data[1] - 20;   // note
-    m_data[2] = data[2] + 20;   // velocity
-  }
-
-  EchoHandler::EchoHandler(jack_client_t * client, double lagSeconds)
-    : m_client(client), m_lagSeconds(lagSeconds), m_lagFrames(0)
+  EchoHandler::EchoHandler(jack_client_t * client, const double lagSeconds, const int offset)
+    : m_client(client), m_lagSeconds(lagSeconds), m_offset(offset), m_lagFrames(0)
   {
     m_inputPort = jack_port_register(m_client, "echo_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
   }
 
-  int EchoHandler::process(jack_nframes_t nframes)
+  int EchoHandler::process(const jack_nframes_t nframes)
   {
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
     void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
@@ -44,7 +59,7 @@ namespace ASI
 	{
 	  const jack_nframes_t newTime = framesAtStart + inEvent.time + m_lagFrames;
 
-	  m_queue.push_back(MidiEvent(inEvent.buffer, newTime));
+	  m_queue.push_back(createNewMidiEvent(newTime, inEvent, m_offset));
 
 	  break;
 	}
@@ -64,7 +79,7 @@ namespace ASI
     return 0;
   }
 
-  int EchoHandler::sampleRate(jack_nframes_t nframes)
+  int EchoHandler::sampleRate(const jack_nframes_t nframes)
   {
     m_lagFrames = m_lagSeconds * nframes;
     return 0;
