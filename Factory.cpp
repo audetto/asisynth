@@ -12,13 +12,13 @@ namespace ASI
   {
     po::options_description desc("ASISynth");
     desc.add_options()
-      ("help", "Print this help message");
+      ("help,h", "Print this help message");
 
     po::options_description echoDesc("Echo");
     echoDesc.add_options()
-      ("echo", "Enable echo effect")
-      ("echo:delay", po::value<double>()->default_value(0.0), "Delay in seconds")
-      ("echo:offset", po::value<int>()->default_value(0), "Note offset in semitones");
+      ("echo,e", "Enable echo effect")
+      ("echo:delay,d", po::value<double>()->default_value(0.0), "Delay in seconds")
+      ("echo:transposition,t", po::value<int>()->default_value(0), "Transposition in semitones");
 
     desc.add(echoDesc);
 
@@ -36,8 +36,8 @@ namespace ASI
       if (vm.count("echo"))
       {
 	const double lag = vm["echo:delay"].as<double>();
-	const int offset = vm["echo:offset"].as<int>();
-	handlers.push_back(std::make_shared<ASI::EchoHandler>(client, lag, offset));
+	const int transposition = vm["echo:transposition"].as<int>();
+	handlers.push_back(std::make_shared<ASI::EchoHandler>(client, lag, transposition));
       }
     }
     catch (po::error& e)

@@ -2,11 +2,11 @@
 
 namespace
 {
-  ASI::MidiEvent createNewMidiEvent(const jack_nframes_t time, const jack_midi_event_t & org, const int offset)
+  ASI::MidiEvent createNewMidiEvent(const jack_nframes_t time, const jack_midi_event_t & org, const int transposition)
   {
     int note = org.buffer[1];
 
-    note += offset;
+    note += transposition;
 
     while (note < 0)
     {
@@ -27,8 +27,8 @@ namespace
 namespace ASI
 {
 
-  EchoHandler::EchoHandler(jack_client_t * client, const double lagSeconds, const int offset)
-    : m_client(client), m_lagSeconds(lagSeconds), m_offset(offset), m_lagFrames(0)
+  EchoHandler::EchoHandler(jack_client_t * client, const double lagSeconds, const int transposition)
+    : m_client(client), m_lagSeconds(lagSeconds), m_transposition(transposition), m_lagFrames(0)
   {
     m_inputPort = jack_port_register(m_client, "echo_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
@@ -59,7 +59,7 @@ namespace ASI
 	{
 	  const jack_nframes_t newTime = framesAtStart + inEvent.time + m_lagFrames;
 
-	  m_queue.push_back(createNewMidiEvent(newTime, inEvent, m_offset));
+	  m_queue.push_back(createNewMidiEvent(newTime, inEvent, m_transposition));
 
 	  break;
 	}

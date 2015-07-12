@@ -56,7 +56,7 @@ namespace
 int main(int argc, char **args)
 {
 
-  jack_client_t * client = jack_client_open ("AsiSynth", JackNullOption, NULL);
+  jack_client_t * client = jack_client_open("AsiSynth", JackNullOption, NULL);
 
   if (!client)
   {
@@ -68,7 +68,14 @@ int main(int argc, char **args)
 
   if (!ASI::createHandlers(argc, args, client, handlers))
   {
+    // -h was selected
     return 3;
+  }
+
+  if (handlers.empty())
+  {
+    // nothing to do
+    return 0;
   }
 
   jack_set_process_callback(client, process, &handlers);

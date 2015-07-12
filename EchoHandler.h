@@ -16,7 +16,7 @@ namespace ASI
   {
   public:
 
-    EchoHandler(jack_client_t * client, const double lagSeconds, const int offset);
+    EchoHandler(jack_client_t * client, const double lagSeconds, const int transposition);
 
     virtual int process(const jack_nframes_t nframes);
 
@@ -28,7 +28,7 @@ namespace ASI
 
     jack_client_t *m_client;
     const double m_lagSeconds;
-    const int m_offset;
+    const int m_transposition;
 
     jack_nframes_t m_lagFrames;
     jack_port_t *m_inputPort;
