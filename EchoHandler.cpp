@@ -72,7 +72,7 @@ namespace ASI
     {
       const MidiEvent & event = m_queue.front();
       const jack_nframes_t newOffset = event.m_time - framesAtStart;
-      jack_midi_event_write(outPortBuf, newOffset, event.m_data, 3);
+      jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
       m_queue.pop_front();
     }
 
