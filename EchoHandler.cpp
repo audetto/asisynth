@@ -2,7 +2,7 @@
 
 namespace
 {
-  ASI::MidiEvent createNewMidiEvent(const jack_nframes_t time, const jack_midi_event_t & org, const int transposition)
+  ASI::MidiEvent createNewMidiEvent(const jack_nframes_t time, const jack_midi_event_t & org, const int transposition, const double velocityRatio)
   {
     int note = org.buffer[1];
 
@@ -18,7 +18,8 @@ namespace
     }
 
     const jack_midi_data_t cmd = org.buffer[0];
-    const jack_midi_data_t velocity = org.buffer[2];
+    jack_midi_data_t velocity = org.buffer[2] * velocityRatio;
+    velocity = std::min(jack_midi_data_t(127), velocity);
 
     return ASI::MidiEvent(time, cmd, note, velocity);
   }
@@ -27,8 +28,8 @@ namespace
 namespace ASI
 {
 
-  EchoHandler::EchoHandler(jack_client_t * client, const double lagSeconds, const int transposition)
-    : m_client(client), m_lagSeconds(lagSeconds), m_transposition(transposition), m_lagFrames(0)
+  EchoHandler::EchoHandler(jack_client_t * client, const double lagSeconds, const int transposition, const double velocityRatio)
+    : m_client(client), m_lagSeconds(lagSeconds), m_transposition(transposition), m_velocityRatio(velocityRatio), m_lagFrames(0)
   {
     m_inputPort = jack_port_register(m_client, "echo_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
@@ -59,7 +60,7 @@ namespace ASI
 	{
 	  const jack_nframes_t newTime = framesAtStart + inEvent.time + m_lagFrames;
 
-	  m_queue.push_back(createNewMidiEvent(newTime, inEvent, m_transposition));
+	  m_queue.push_back(createNewMidiEvent(newTime, inEvent, m_transposition, m_velocityRatio));
 
 	  break;
 	}

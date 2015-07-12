@@ -18,7 +18,8 @@ namespace ASI
     echoDesc.add_options()
       ("echo,e", "Enable echo effect")
       ("echo:delay,d", po::value<double>()->default_value(0.0), "Delay in seconds")
-      ("echo:transposition,t", po::value<int>()->default_value(0), "Transposition in semitones");
+      ("echo:transposition,t", po::value<int>()->default_value(0), "Transposition in semitones")
+      ("echo:velocity,v", po::value<double>()->default_value(1.0), "Velocity ratio");
 
     desc.add(echoDesc);
 
@@ -37,7 +38,8 @@ namespace ASI
       {
 	const double lag = vm["echo:delay"].as<double>();
 	const int transposition = vm["echo:transposition"].as<int>();
-	handlers.push_back(std::make_shared<ASI::EchoHandler>(client, lag, transposition));
+	const double velocity = vm["echo:velocity"].as<double>();
+	handlers.push_back(std::make_shared<ASI::EchoHandler>(client, lag, transposition, velocity));
       }
     }
     catch (po::error& e)
