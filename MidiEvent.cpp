@@ -10,10 +10,10 @@ namespace ASI
   {
     switch (size)
     {
-    case 4: m_data[3] = data[3];   // cmd
+    case 4: m_data[3] = data[3];   // extra
     case 3: m_data[2] = data[2];   // velocity
     case 2: m_data[1] = data[1];   // note
-    case 1: m_data[0] = data[0];   // velocity
+    case 1: m_data[0] = data[0];   // cmd
       break;
     default:
       assert(size <= 4);
