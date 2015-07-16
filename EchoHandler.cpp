@@ -1,4 +1,5 @@
 #include "EchoHandler.h"
+#include "MidiCommands.h"
 
 namespace
 {
@@ -55,8 +56,8 @@ namespace ASI
 
       switch (cmd)
       {
-      case 0x90: // note ON
-      case 0x80: // note OFF
+      case MIDI_NOTEON:
+      case MIDI_NOTEOFF:
 	{
 	  const jack_nframes_t newTime = framesAtStart + inEvent.time + m_lagFrames;
 

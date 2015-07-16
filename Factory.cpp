@@ -1,4 +1,5 @@
 #include "EchoHandler.h"
+#include "ModeHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -23,6 +24,15 @@ namespace ASI
 
     desc.add(echoDesc);
 
+    po::options_description modeDesc("Mode change");
+
+    modeDesc.add_options()
+      ("mode", "Enable Major <-> Minor transposition")
+      ("mode:offset", po::value<int>()->default_value(0), "0 C, 1 B, 2 B flat ... , 11 D flat")
+      ("mode:target", po::value<std::string>(), "Target mode: major / minor");
+
+    desc.add(modeDesc);
+
     po::variables_map vm;
     try
     {
@@ -40,6 +50,13 @@ namespace ASI
 	const int transposition = vm["echo:transposition"].as<int>();
 	const double velocity = vm["echo:velocity"].as<double>();
 	handlers.push_back(std::make_shared<ASI::EchoHandler>(client, lag, transposition, velocity));
+      }
+
+      if (vm.count("mode"))
+      {
+	const int offset = vm["mode:offset"].as<int>();
+	const std::string target = vm["mode:target"].as<std::string>();
+	handlers.push_back(std::make_shared<ASI::ModeHandler>(client, offset, target));
       }
     }
     catch (po::error& e)
