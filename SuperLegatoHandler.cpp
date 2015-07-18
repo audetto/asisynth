@@ -40,7 +40,7 @@ namespace ASI
 
       const jack_nframes_t newTime = framesAtStart + inEvent.time + delay;
 
-      // they will be insterned in order
+      // they will be inserted in order (< of the multiset)
       m_queue.insert(MidiEvent(newTime, inEvent.buffer, inEvent.size));
     }
 
