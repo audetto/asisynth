@@ -6,7 +6,8 @@ add_executable(asisynth
   EchoHandler.cpp
   Factory.cpp
   MidiEvent.cpp
-  ModeHandler.cpp)
+  ModeHandler.cpp
+  SuperLegatoHandler.cpp)
 
 target_link_libraries(asisynth jack)
 target_link_libraries(asisynth boost_program_options)

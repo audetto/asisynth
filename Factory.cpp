@@ -1,5 +1,6 @@
 #include "EchoHandler.h"
 #include "ModeHandler.h"
+#include "SuperLegatoHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -21,17 +22,20 @@ namespace ASI
       ("echo:delay,d", po::value<double>()->default_value(0.0), "Delay in seconds")
       ("echo:transposition,t", po::value<int>()->default_value(0), "Transposition in semitones")
       ("echo:velocity,v", po::value<double>()->default_value(1.0), "Velocity ratio");
-
     desc.add(echoDesc);
 
     po::options_description modeDesc("Mode change");
-
     modeDesc.add_options()
       ("mode", "Enable Major <-> Minor transposition")
       ("mode:offset", po::value<int>()->default_value(0), "0 C, 1 B, 2 B flat ... , 11 D flat")
       ("mode:target", po::value<std::string>(), "Target mode: major / minor");
-
     desc.add(modeDesc);
+
+    po::options_description legatoDesc("Super Legato");
+    legatoDesc.add_options()
+      ("legato", "Super Legato")
+      ("legato:delay", po::value<int>()->default_value(0), "NOTEOFF delay in milliseconds");
+    desc.add(legatoDesc);
 
     po::variables_map vm;
     try
@@ -57,6 +61,12 @@ namespace ASI
 	const int offset = vm["mode:offset"].as<int>();
 	const std::string target = vm["mode:target"].as<std::string>();
 	handlers.push_back(std::make_shared<ASI::ModeHandler>(client, offset, target));
+      }
+
+      if (vm.count("legato"))
+      {
+	const int delay = vm["legato:delay"].as<int>();
+	handlers.push_back(std::make_shared<ASI::SuperLegatoHandler>(client, delay));
       }
     }
     catch (po::error& e)

@@ -13,6 +13,8 @@ namespace ASI
     jack_nframes_t m_time;
     size_t m_size;
     jack_midi_data_t m_data[4];
+
+    bool operator< (const MidiEvent & rhs) const;
   };
 
 }

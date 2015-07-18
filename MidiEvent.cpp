@@ -28,4 +28,9 @@ namespace ASI
     m_data[2] = velocity;
   }
 
+  bool MidiEvent::operator<(const MidiEvent & rhs) const
+  {
+    return m_time < rhs.m_time;
+  }
+
 }
