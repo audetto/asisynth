@@ -10,6 +10,7 @@
 #include <jack/midiport.h>
 
 #include <unistd.h>
+#include <signal.h>
 
 namespace
 {
@@ -21,6 +22,10 @@ namespace
     Handlers_t handlers;
     std::atomic<bool> alive;
   };
+
+  // here so it can be accessed by the signal handler
+  // but I'd like to keep it on the stack of the app
+  ClientData data;
 
   int process(jack_nframes_t nframes, void *arg)
   {
@@ -63,6 +68,11 @@ namespace
     data.alive = false;
   }
 
+  void signalHandler(int i)
+  {
+    data.alive = false;
+  }
+
 }
 
 int main(int argc, char **args)
@@ -76,7 +86,6 @@ int main(int argc, char **args)
     return 1;
   }
 
-  ClientData data;
   std::vector<std::shared_ptr<ASI::I_JackHandler> > & handlers = data.handlers;
   data.alive = false;
 
@@ -98,6 +107,9 @@ int main(int argc, char **args)
 
   jack_on_shutdown(client, shutdown, &handlers);
 
+  signal(SIGINT, &signalHandler);
+  signal(SIGTERM, &signalHandler);
+
   if (jack_activate(client))
   {
     std::cerr << "Cannot activate client" << std::endl;
@@ -111,7 +123,9 @@ int main(int argc, char **args)
     sleep(1);
   }
 
+  // detach all ports
   handlers.clear();
   jack_client_close(client);
+
   return 0;
 }
