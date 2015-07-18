@@ -7,9 +7,14 @@
 namespace
 {
 
-  //                             0   1   2   3   4   5   6   7   8   9   10  11
-  const int majorToMinor[12] = { 0,  1,  2, -1,  3,  5,  6,  7, -1,  8,   9, 10};
-  const int minorToMajor[12] = { 0,  1,  2,  4, -1,  5,  6,  7,  9, 10,  11, -1};
+  // all 7 notes of the major scale, can be converted to minor
+  // of the other 5 alterations, 2 cannot
+  // (e.g. between 3rd and 4th major note there is nothing,
+  // while between 3rd and 4th minor there is one)
+  //
+  //                             0   1   2   3   4   5   6   7   8   9  10  11
+  const int majorToMinor[12] = { 0,  1,  2, -1,  3,  5,  6,  7, -1,  8,  9, 10};
+  const int minorToMajor[12] = { 0,  1,  2,  4, -1,  5,  6,  7,  9, 10, 11, -1};
 
   jack_midi_data_t transpose(const int offset, const int note, bool & ok)
   {
@@ -27,8 +32,10 @@ namespace
     }
     else
     {
-      ok = true;
       const int newNote = -offset + res.quot * 12 + x;
+
+      // check we are in the MIDI range, otherwise, do not play
+      ok = newNote >= 0 && newNote < 128;
       return newNote;
     }
   }
@@ -108,6 +115,7 @@ namespace ASI
 
   int ModeHandler::sampleRate(const jack_nframes_t nframes)
   {
+    return 0;
   }
 
   void ModeHandler::shutdown()
