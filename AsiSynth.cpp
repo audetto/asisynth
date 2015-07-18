@@ -124,7 +124,6 @@ int main(int argc, char **args)
   }
 
   // detach all ports
-  handlers.clear();
   jack_client_close(client);
 
   return 0;

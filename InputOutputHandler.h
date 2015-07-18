@@ -9,7 +9,6 @@ namespace ASI
   {
   public:
     InputOutputHandler(jack_client_t * client);
-    virtual ~InputOutputHandler();
 
   protected:
     jack_client_t *m_client;
