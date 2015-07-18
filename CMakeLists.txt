@@ -4,6 +4,7 @@ add_executable(asisynth
   AsiSynth.cpp
   I_JackHandler.cpp
   MidiEvent.cpp
+  MidiPassThrough.cpp
   InputOutputHandler
   EchoHandler.cpp
   Factory.cpp

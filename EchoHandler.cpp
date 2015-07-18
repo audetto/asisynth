@@ -1,5 +1,6 @@
 #include "EchoHandler.h"
 #include "MidiCommands.h"
+#include "MidiPassThrough.h"
 
 namespace
 {
@@ -41,16 +42,26 @@ namespace ASI
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
     void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
+    jack_midi_clear_buffer(outPortBuf);
+
+    if (!m_active)
+    {
+      return midiPassThrough(inPortBuf, outPortBuf, nframes, m_active);
+    }
+
     jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
     jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
-
-    jack_midi_clear_buffer(outPortBuf);
 
     for(size_t i = 0; i < eventCount; ++i)
     {
       jack_midi_event_t inEvent;
       jack_midi_event_get(&inEvent, inPortBuf, i);
+
+      if (filtered(inEvent, m_active))
+      {
+	continue;
+      }
 
       jack_midi_data_t cmd = *inEvent.buffer & 0xf0;
 
@@ -76,6 +87,11 @@ namespace ASI
       const jack_nframes_t newOffset = event.m_time - framesAtStart;
       jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
       m_queue.pop_front();
+    }
+
+    if (!m_active)
+    {
+      m_queue.clear();
     }
 
     return 0;

@@ -1,5 +1,6 @@
 #include "ModeHandler.h"
 #include "MidiCommands.h"
+#include "MidiPassThrough.h"
 
 #include <cstdlib>
 #include <cassert>
@@ -69,14 +70,24 @@ namespace ASI
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
     void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
-    jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
-
     jack_midi_clear_buffer(outPortBuf);
+
+    if (!m_active)
+    {
+      return midiPassThrough(inPortBuf, outPortBuf, nframes, m_active);
+    }
+
+    jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
     for(size_t i = 0; i < eventCount; ++i)
     {
       jack_midi_event_t inEvent;
       jack_midi_event_get(&inEvent, inPortBuf, i);
+
+      if (filtered(inEvent, m_active))
+      {
+	continue;
+      }
 
       jack_midi_data_t cmd = *inEvent.buffer & 0xf0;
 
@@ -109,7 +120,6 @@ namespace ASI
 	}
       }
     }
-
     return 0;
   }
 
