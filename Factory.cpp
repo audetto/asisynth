@@ -27,8 +27,9 @@ namespace ASI
     po::options_description modeDesc("Mode change");
     modeDesc.add_options()
       ("mode", "Enable Major <-> Minor transposition")
-      ("mode:offset", po::value<int>()->default_value(0), "0 C, 1 B, 2 B flat ... , 11 D flat")
-      ("mode:target", po::value<std::string>(), "Target mode: major / minor");
+      ("mode:offset", po::value<int>()->default_value(0), "0 C, 1 B, 2 B flat, ..., 11 D flat")
+      ("mode:target", po::value<std::string>(), "Target mode: major / minor")
+      ("mode:quirk", po::value<std::string>()->default_value("skip"), "Quirk mode: below / skip / above");
     desc.add(modeDesc);
 
     po::options_description legatoDesc("Super Legato");
@@ -60,7 +61,8 @@ namespace ASI
       {
 	const int offset = vm["mode:offset"].as<int>();
 	const std::string target = vm["mode:target"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::ModeHandler>(client, offset, target));
+	const std::string quirk = vm["mode:quirk"].as<std::string>();
+	handlers.push_back(std::make_shared<ASI::ModeHandler>(client, offset, target, quirk));
       }
 
       if (vm.count("legato"))

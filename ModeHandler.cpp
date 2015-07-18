@@ -13,39 +13,42 @@ namespace
   // (e.g. between 3rd and 4th major note there is nothing,
   // while between 3rd and 4th minor there is one)
   //
-  //                             0   1   2   3   4   5   6   7   8   9  10  11
-  const int majorToMinor[12] = { 0,  1,  2, -1,  3,  5,  6,  7, -1,  8,  9, 10};
-  const int minorToMajor[12] = { 0,  1,  2,  4, -1,  5,  6,  7,  9, 10, 11, -1};
+  //                             0   1   2   3   4   5   6   7   8   9  10  11, 12
+  const int majorToMinor[13] = { 0,  1,  2, -1,  3,  5,  6,  7, -1,  8,  9, 10, 12};
+  const int minorToMajor[13] = { 0,  1,  2,  4, -1,  5,  6,  7,  9, 10, 11, -1, 12};
 
-  jack_midi_data_t transpose(const int offset, const int note, bool & ok)
+  jack_midi_data_t transpose(const int offset, const int quirkOffset, const int note, bool & ok)
   {
     const int noteAdj = note + offset;
     const std::div_t res = std::div(noteAdj, 12);
 
-    const int x = majorToMinor[res.rem];
+    int x = majorToMinor[res.rem];
 
     if (x == -1)
     {
-      // this accidental note (not in the canonical scale)
-      // cannot be converted and will not be played
-      ok = false;
-      return 0;
+      // try again with quirk
+      x = majorToMinor[res.rem + quirkOffset];
+      if (x == -1)
+      {
+	// this accidental note (not in the canonical scale)
+	// cannot be converted and will not be played
+	ok = false;
+	return 0;
+      }
     }
-    else
-    {
-      const int newNote = -offset + res.quot * 12 + x;
 
-      // check we are in the MIDI range, otherwise, do not play
-      ok = newNote >= 0 && newNote < 128;
-      return newNote;
-    }
+    const int newNote = -offset + res.quot * 12 + x;
+
+    // check we are in the MIDI range, otherwise, do not play
+    ok = newNote >= 0 && newNote < 128;
+    return newNote;
   }
 }
 
 namespace ASI
 {
 
-  ModeHandler::ModeHandler(jack_client_t * client, const int offset, const std::string & target)
+  ModeHandler::ModeHandler(jack_client_t * client, const int offset, const std::string & target, const std::string & quirk)
     : InputOutputHandler(client), m_offset(offset % 12)
   {
     m_inputPort = jack_port_register(m_client, "mode_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
@@ -63,6 +66,24 @@ namespace ASI
     {
       assert(false);
     }
+
+    if (quirk == "below")
+    {
+      m_quirkOffset = -1;
+    }
+    else if (quirk == "skip")
+    {
+      m_quirkOffset = 0;
+    }
+    else if (quirk == "above")
+    {
+      m_quirkOffset = 1;
+    }
+    else
+    {
+      assert(false);
+    }
+
   }
 
   void ModeHandler::process(const jack_nframes_t nframes)
@@ -99,7 +120,7 @@ namespace ASI
 	  const jack_midi_data_t note = inEvent.buffer[1];
 
 	  bool ok;
-	  const jack_midi_data_t newNote = transpose(m_offset, note, ok);
+	  const jack_midi_data_t newNote = transpose(m_offset, m_quirkOffset, note, ok);
 
 	  if (ok)
 	  {
