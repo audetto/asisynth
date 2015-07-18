@@ -13,6 +13,6 @@ namespace ASI
   bool filtered(const jack_midi_event_t & event, bool & active);
 
   // execute the passthrough and update the active flag (i.e. it switches it off in case);
-  int midiPassThrough(void* inPortBuf, void* outPortBuf, const jack_nframes_t nframes, bool & active);
+  void midiPassThrough(void* inPortBuf, void* outPortBuf, const jack_nframes_t nframes, bool & active);
 
 }

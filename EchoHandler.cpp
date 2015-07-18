@@ -37,7 +37,7 @@ namespace ASI
     m_outputPort = jack_port_register (m_client, "echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
   }
 
-  int EchoHandler::process(const jack_nframes_t nframes)
+  void EchoHandler::process(const jack_nframes_t nframes)
   {
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
     void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
@@ -93,14 +93,11 @@ namespace ASI
     {
       m_queue.clear();
     }
-
-    return 0;
   }
 
-  int EchoHandler::sampleRate(const jack_nframes_t nframes)
+  void EchoHandler::sampleRate(const jack_nframes_t nframes)
   {
     m_lagFrames = m_lagSeconds * nframes;
-    return 0;
   }
 
   void EchoHandler::shutdown()

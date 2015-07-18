@@ -34,9 +34,7 @@ namespace
 
     for (auto & handler : handlers)
     {
-      int res = handler->process(nframes);
-      if (res)
-	return res;
+      handler->process(nframes);
     }
     return 0;
   }
@@ -48,9 +46,7 @@ namespace
 
     for (auto & handler : handlers)
     {
-      int res = handler->sampleRate(nframes);
-      if (res)
-	return res;
+      handler->sampleRate(nframes);
     }
     return 0;
   }

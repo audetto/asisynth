@@ -18,9 +18,9 @@ namespace ASI
 
     EchoHandler(jack_client_t * client, const double lagSeconds, const int transposition, const double velocityRatio);
 
-    virtual int process(const jack_nframes_t nframes);
+    virtual void process(const jack_nframes_t nframes);
 
-    virtual int sampleRate(const jack_nframes_t nframes);
+    virtual void sampleRate(const jack_nframes_t nframes);
 
     virtual void shutdown();
 

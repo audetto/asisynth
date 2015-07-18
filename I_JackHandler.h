@@ -10,9 +10,9 @@ namespace ASI
   public:
     virtual ~I_JackHandler();
 
-    virtual int process(const jack_nframes_t nframes) = 0;
+    virtual void process(const jack_nframes_t nframes) = 0;
 
-    virtual int sampleRate(const jack_nframes_t nframes) = 0;
+    virtual void sampleRate(const jack_nframes_t nframes) = 0;
 
     virtual void shutdown() = 0;
   };

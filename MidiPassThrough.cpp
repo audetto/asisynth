@@ -31,7 +31,7 @@ namespace ASI
     }
   }
 
-  int midiPassThrough(void* inPortBuf, void* outPortBuf, const jack_nframes_t nframes, bool & active)
+  void midiPassThrough(void* inPortBuf, void* outPortBuf, const jack_nframes_t nframes, bool & active)
   {
     std::cout << "Inactive" << std::endl;
     const jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
@@ -49,8 +49,6 @@ namespace ASI
 	jack_midi_event_write(outPortBuf, inEvent.time, inEvent.buffer, inEvent.size);
       }
     }
-
-    return 0;
   }
 
 }

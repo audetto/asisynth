@@ -65,7 +65,7 @@ namespace ASI
     }
   }
 
-  int ModeHandler::process(const jack_nframes_t nframes)
+  void ModeHandler::process(const jack_nframes_t nframes)
   {
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
     void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
@@ -120,12 +120,10 @@ namespace ASI
 	}
       }
     }
-    return 0;
   }
 
-  int ModeHandler::sampleRate(const jack_nframes_t nframes)
+  void ModeHandler::sampleRate(const jack_nframes_t nframes)
   {
-    return 0;
   }
 
   void ModeHandler::shutdown()

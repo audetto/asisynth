@@ -18,7 +18,7 @@ namespace ASI
     assert(m_delayMilliseconds >= 0);
   }
 
-  int SuperLegatoHandler::process(const jack_nframes_t nframes)
+  void SuperLegatoHandler::process(const jack_nframes_t nframes)
   {
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
     void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
@@ -71,15 +71,11 @@ namespace ASI
     {
       m_queue.clear();
     }
-
-    return 0;
   }
 
-  int SuperLegatoHandler::sampleRate(const jack_nframes_t nframes)
+  void SuperLegatoHandler::sampleRate(const jack_nframes_t nframes)
   {
     m_delayFrames = m_delayMilliseconds * nframes / 1000;
-
-    return 0;
   }
 
   void SuperLegatoHandler::shutdown()

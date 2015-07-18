@@ -17,9 +17,9 @@ namespace ASI
 
     ModeHandler(jack_client_t * client, const int offset, const std::string & target);
 
-    virtual int process(const jack_nframes_t nframes);
+    virtual void process(const jack_nframes_t nframes);
 
-    virtual int sampleRate(const jack_nframes_t nframes);
+    virtual void sampleRate(const jack_nframes_t nframes);
 
     virtual void shutdown();
 

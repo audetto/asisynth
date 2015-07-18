@@ -18,9 +18,9 @@ namespace ASI
 
     SuperLegatoHandler(jack_client_t * client, const int delayMilliseconds);
 
-    virtual int process(const jack_nframes_t nframes);
+    virtual void process(const jack_nframes_t nframes);
 
-    virtual int sampleRate(const jack_nframes_t nframes);
+    virtual void sampleRate(const jack_nframes_t nframes);
 
     virtual void shutdown();
 
