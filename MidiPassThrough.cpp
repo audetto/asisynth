@@ -1,6 +1,5 @@
 #include "MidiPassThrough.h"
 #include "MidiCommands.h"
-#include <iostream>
 
 namespace ASI
 {
@@ -17,7 +16,6 @@ namespace ASI
 	const jack_midi_data_t value = event.buffer[2];
 
 	active = value < 64;
-	std::cout << "Filtered " << active << std::endl;
 	return true;
       }
       else
@@ -33,7 +31,6 @@ namespace ASI
 
   void midiPassThrough(void* inPortBuf, void* outPortBuf, const jack_nframes_t nframes, bool & active)
   {
-    std::cout << "Inactive" << std::endl;
     const jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
     for(size_t i = 0; i < eventCount; ++i)
