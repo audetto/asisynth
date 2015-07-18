@@ -4,20 +4,28 @@
 #include <iostream>
 #include <vector>
 #include <memory>
+#include <atomic>
 
 #include <jack/jack.h>
 #include <jack/midiport.h>
 
 #include <unistd.h>
 
-typedef std::vector<std::shared_ptr<ASI::I_JackHandler> > Handlers_t;
-
 namespace
 {
 
+  typedef std::vector<std::shared_ptr<ASI::I_JackHandler> > Handlers_t;
+
+  struct ClientData
+  {
+    Handlers_t handlers;
+    std::atomic<bool> alive;
+  };
+
   int process(jack_nframes_t nframes, void *arg)
   {
-    Handlers_t & handlers = *reinterpret_cast<Handlers_t *>(arg);
+    ClientData & data = *reinterpret_cast<ClientData *>(arg);
+    Handlers_t & handlers = data.handlers;
 
     for (auto & handler : handlers)
     {
@@ -30,7 +38,8 @@ namespace
 
   int sampleRate(jack_nframes_t nframes, void *arg)
   {
-    Handlers_t & handlers = *reinterpret_cast<Handlers_t *>(arg);
+    ClientData & data = *reinterpret_cast<ClientData *>(arg);
+    Handlers_t & handlers = data.handlers;
 
     for (auto & handler : handlers)
     {
@@ -43,12 +52,15 @@ namespace
 
   void shutdown(void *arg)
   {
-    Handlers_t & handlers = *reinterpret_cast<Handlers_t *>(arg);
+    ClientData & data = *reinterpret_cast<ClientData *>(arg);
+    Handlers_t & handlers = data.handlers;
 
     for (auto & handler : handlers)
     {
       handler->shutdown();
     }
+
+    data.alive = false;
   }
 
 }
@@ -64,7 +76,9 @@ int main(int argc, char **args)
     return 1;
   }
 
-  std::vector<std::shared_ptr<ASI::I_JackHandler> > handlers;
+  ClientData data;
+  std::vector<std::shared_ptr<ASI::I_JackHandler> > & handlers = data.handlers;
+  data.alive = false;
 
   if (!ASI::createHandlers(argc, args, client, handlers))
   {
@@ -89,13 +103,15 @@ int main(int argc, char **args)
     std::cerr << "Cannot activate client" << std::endl;
     return 2;
   }
+  data.alive = true;
 
   /* run until interrupted */
-  while(1)
+  while(data.alive)
   {
     sleep(1);
   }
 
+  handlers.clear();
   jack_client_close(client);
   return 0;
 }

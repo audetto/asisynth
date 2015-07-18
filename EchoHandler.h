@@ -1,6 +1,6 @@
 #pragma once
 
-#include "I_JackHandler.h"
+#include "InputOutputHandler.h"
 #include "MidiEvent.h"
 
 #include <jack/midiport.h>
@@ -12,7 +12,7 @@ namespace ASI
   /*
     This class echoes all midi event coming in with a delay of lagSeconds
    */
-  class EchoHandler : public I_JackHandler
+  class EchoHandler : public InputOutputHandler
   {
   public:
 
@@ -26,14 +26,11 @@ namespace ASI
 
   private:
 
-    jack_client_t *m_client;
     const double m_lagSeconds;
     const int m_transposition;
     const double m_velocityRatio;
 
     jack_nframes_t m_lagFrames;
-    jack_port_t *m_inputPort;
-    jack_port_t *m_outputPort;
 
     std::list<MidiEvent> m_queue;
 

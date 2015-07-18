@@ -9,7 +9,7 @@ namespace ASI
 {
 
   SuperLegatoHandler::SuperLegatoHandler(jack_client_t * client, const int delayMilliseconds)
-    : m_client(client), m_delayMilliseconds(delayMilliseconds)
+    : InputOutputHandler(client), m_delayMilliseconds(delayMilliseconds)
   {
     m_inputPort = jack_port_register(m_client, "legato_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "legato_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);

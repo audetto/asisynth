@@ -45,7 +45,7 @@ namespace ASI
 {
 
   ModeHandler::ModeHandler(jack_client_t * client, const int offset, const std::string & target)
-    : m_client(client), m_offset(offset % 12)
+    : InputOutputHandler(client), m_offset(offset % 12)
   {
     m_inputPort = jack_port_register(m_client, "mode_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "mode_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
