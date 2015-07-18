@@ -74,7 +74,7 @@ namespace
 int main(int argc, char **args)
 {
 
-  jack_client_t * client = jack_client_open("AsiSynth", JackNullOption, NULL);
+  jack_client_t * client = jack_client_open("AsiSynth", JackNullOption, nullptr);
 
   if (!client)
   {
