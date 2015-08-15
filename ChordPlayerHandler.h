@@ -40,6 +40,8 @@ namespace ASI
 
     size_t m_next;
     size_t m_previous;
+
+    void reset();
   };
 
 }

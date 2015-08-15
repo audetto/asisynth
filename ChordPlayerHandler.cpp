@@ -1,5 +1,6 @@
 #include "ChordPlayerHandler.h"
 #include "MidiCommands.h"
+#include "MidiPassThrough.h"
 
 #include <fstream>
 #include <iostream>
@@ -192,10 +193,15 @@ namespace ASI
     m_outputPort = jack_port_register (m_client, "chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
     populateChords(m_filename, m_chords);
+    printChords(m_chords);
+
+    reset();
+  }
+
+  void ChordPlayerHandler::reset()
+  {
     m_previous = 0;
     m_next = 1;
-
-    printChords(m_chords);
   }
 
   void ChordPlayerHandler::process(const jack_nframes_t nframes)
@@ -217,24 +223,36 @@ namespace ASI
       jack_midi_event_t inEvent;
       jack_midi_event_get(&inEvent, inPortBuf, i);
 
-      const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
-
-      if (cmd == MIDI_NOTEON)
+      // if we press middle pedal, stop execution and reset pointers
+      if (filtered(inEvent, m_active))
       {
-	const ChordData & next = m_chords[m_next];
+	// cancel the last chord played
+	execute(outPortBuf, inEvent.time, m_chords[m_previous], MIDI_NOTEOFF);
+	// reset pointers
+	reset();
+      }
 
-	const jack_midi_data_t note = inEvent.buffer[1];
-	std::cout << "t: " << (int)next.trigger << ", n: " << (int)note << std::endl;
-	if (note == next.trigger)
+      if (m_active)
+      {
+	const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
+
+	if (cmd == MIDI_NOTEON)
 	{
-	  if (!next.skip)
+	  const ChordData & next = m_chords[m_next];
+
+	  const jack_midi_data_t note = inEvent.buffer[1];
+	  std::cout << "t: " << (int)next.trigger << ", n: " << (int)note << std::endl;
+	  if (note == next.trigger)
 	  {
-	    // -1 is safe as there is an initial one
-	    execute(outPortBuf, inEvent.time, m_chords[m_previous], MIDI_NOTEOFF);
-	    execute(outPortBuf, inEvent.time, m_chords[m_next], MIDI_NOTEON);
-	    m_previous = m_next;
+	    if (!next.skip)
+	    {
+	      // -1 is safe as there is an initial one
+	      execute(outPortBuf, inEvent.time, m_chords[m_previous], MIDI_NOTEOFF);
+	      execute(outPortBuf, inEvent.time, m_chords[m_next], MIDI_NOTEON);
+	      m_previous = m_next;
+	    }
+	    ++m_next;
 	  }
-	  ++m_next;
 	}
       }
 
