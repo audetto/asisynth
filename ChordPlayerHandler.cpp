@@ -168,7 +168,9 @@ namespace
   {
     const std::vector<jack_midi_data_t> & notes = data.notes;
 
-    const jack_midi_data_t actualCommand = cmd + 1;
+    // stay on the same channel
+    const int inputChannel = event.buffer[0] & 0xf;
+    const jack_midi_data_t actualCommand = cmd | inputChannel;
 
     const jack_midi_data_t inputVelocity = event.buffer[2];
     const jack_midi_data_t actualVelocity = velocity == 0 ? inputVelocity : velocity & 0x7f;
