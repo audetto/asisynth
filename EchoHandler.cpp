@@ -63,7 +63,7 @@ namespace ASI
 	continue;
       }
 
-      jack_midi_data_t cmd = *inEvent.buffer & 0xf0;
+      const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
 
       switch (cmd)
       {

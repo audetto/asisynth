@@ -44,7 +44,7 @@ namespace ASI
 	continue;
       }
 
-      const jack_midi_data_t cmd = *inEvent.buffer & 0xf0;
+      const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
 
       // NOTEOFF is delayed to achieve extra legato effect
       const jack_nframes_t delay = (cmd == MIDI_NOTEOFF) ? m_delayFrames : 0;

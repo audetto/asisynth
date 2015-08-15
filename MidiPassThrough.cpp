@@ -6,7 +6,7 @@ namespace ASI
 
   bool filtered(const jack_midi_event_t & event, bool & active)
   {
-    const jack_midi_data_t cmd = *event.buffer & 0xf0;
+    const jack_midi_data_t cmd = event.buffer[0] & 0xf0;
 
     if (cmd == MIDI_CC)
     {
