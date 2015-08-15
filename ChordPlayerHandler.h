@@ -38,8 +38,8 @@ namespace ASI
 
     std::vector<ChordData> m_chords;
 
-    int m_next;
-    int m_previous;
+    size_t m_next;
+    size_t m_previous;
   };
 
 }
