@@ -1,6 +1,7 @@
 #include "EchoHandler.h"
 #include "ModeHandler.h"
 #include "SuperLegatoHandler.h"
+#include "ChordPlayerHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -38,6 +39,12 @@ namespace ASI
       ("legato:delay", po::value<int>()->default_value(0), "NOTEOFF delay in milliseconds");
     desc.add(legatoDesc);
 
+    po::options_description chordDesc("Chord Player");
+    chordDesc.add_options()
+      ("chords", "Chord Player")
+      ("chords:file", po::value<std::string>(), "Chord filename");
+    desc.add(chordDesc);
+
     po::variables_map vm;
     try
     {
@@ -69,6 +76,12 @@ namespace ASI
       {
 	const int delay = vm["legato:delay"].as<int>();
 	handlers.push_back(std::make_shared<ASI::SuperLegatoHandler>(client, delay));
+      }
+
+      if (vm.count("chords"))
+      {
+	const std::string filename = vm["chords:file"].as<std::string>();
+	handlers.push_back(std::make_shared<ASI::ChordPlayerHandler>(client, filename));
       }
     }
     catch (po::error& e)

@@ -1,0 +1,38 @@
+# start at bar 17
+
+Bb2,Bbmaj
+A2,Fmaj/A
+G2,Gmin
+Eb2,Ebmaj
+Bb2,SKIP
+Bb2,Bbmaj
+
+# 1
+F2,Fmaj
+C3,SKIP
+C3,Cmin7
+F2,Fsus4
+
+# repeat
+Bb2,Bbmaj
+A2,Fmaj/A
+G2,Gmin
+Eb2,Ebmaj
+Bb2,SKIP
+Bb2,Bbmaj
+
+#2
+F2,Fmaj
+C3,SKIP
+C3,Cmin7
+F2,Fdom7
+
+# 2nd
+Bb2,Bbmaj
+A2,Fmaj/A
+G2,Gmin
+Eb2,Ebmaj
+F2,Bbmaj/F
+F2,Fdom7
+Bb2,Bbsus4
+Bb2,Bbmaj

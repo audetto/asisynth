@@ -5,8 +5,9 @@ add_executable(asisynth
   I_JackHandler.cpp
   MidiEvent.cpp
   MidiPassThrough.cpp
-  InputOutputHandler
+  ChordPlayerHandler.cpp
   EchoHandler.cpp
+  InputOutputHandler
   Factory.cpp
   ModeHandler.cpp
   SuperLegatoHandler.cpp)
