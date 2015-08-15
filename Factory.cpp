@@ -42,7 +42,8 @@ namespace ASI
     po::options_description chordDesc("Chord Player");
     chordDesc.add_options()
       ("chords", "Chord Player")
-      ("chords:file", po::value<std::string>(), "Chord filename");
+      ("chords:file", po::value<std::string>(), "Chord filename")
+      ("chords:velocity", po::value<int>()->default_value(0), "Chord velocity (0 use trigger note's)");
     desc.add(chordDesc);
 
     po::variables_map vm;
@@ -81,7 +82,8 @@ namespace ASI
       if (vm.count("chords"))
       {
 	const std::string filename = vm["chords:file"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::ChordPlayerHandler>(client, filename));
+	const int velocity = vm["chords:velocity"].as<int>();
+	handlers.push_back(std::make_shared<ASI::ChordPlayerHandler>(client, filename, velocity));
       }
     }
     catch (po::error& e)

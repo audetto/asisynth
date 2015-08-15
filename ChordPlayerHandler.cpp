@@ -164,20 +164,23 @@ namespace
     }
   }
 
-  void execute(void * buffer, const jack_nframes_t time, const ASI::ChordPlayerHandler::ChordData & data, const jack_midi_data_t cmd)
+  void execute(void * buffer, const int velocity, const jack_midi_event_t & event, const ASI::ChordPlayerHandler::ChordData & data, const jack_midi_data_t cmd)
   {
     const std::vector<jack_midi_data_t> & notes = data.notes;
 
     const jack_midi_data_t actualCommand = cmd + 1;
+
+    const jack_midi_data_t inputVelocity = event.buffer[2];
+    const jack_midi_data_t actualVelocity = velocity == 0 ? inputVelocity : velocity & 0x7f;
 
     for (auto n : notes)
     {
       jack_midi_data_t data[3];
       data[0] = actualCommand;
       data[1] = n;
-      data[2] = 64;
+      data[2] = actualVelocity;
 
-      jack_midi_event_write(buffer, time, data, 3);
+      jack_midi_event_write(buffer, event.time, data, 3);
     }
   }
 
@@ -186,8 +189,8 @@ namespace
 namespace ASI
 {
 
-  ChordPlayerHandler::ChordPlayerHandler(jack_client_t * client, const std::string & filename)
-    : InputOutputHandler(client), m_filename(filename)
+  ChordPlayerHandler::ChordPlayerHandler(jack_client_t * client, const std::string & filename, const int velocity)
+    : InputOutputHandler(client), m_filename(filename), m_velocity(velocity)
   {
     m_inputPort = jack_port_register(m_client, "chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
@@ -227,7 +230,7 @@ namespace ASI
       if (filtered(inEvent, m_active))
       {
 	// cancel the last chord played
-	execute(outPortBuf, inEvent.time, m_chords[m_previous], MIDI_NOTEOFF);
+	execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
 	// reset pointers
 	reset();
       }
@@ -247,8 +250,8 @@ namespace ASI
 	    if (!next.skip)
 	    {
 	      // -1 is safe as there is an initial one
-	      execute(outPortBuf, inEvent.time, m_chords[m_previous], MIDI_NOTEOFF);
-	      execute(outPortBuf, inEvent.time, m_chords[m_next], MIDI_NOTEON);
+	      execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
+	      execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
 	      m_previous = m_next;
 	    }
 	    ++m_next;

@@ -17,7 +17,7 @@ namespace ASI
   {
   public:
 
-    ChordPlayerHandler(jack_client_t * client, const std::string & filename);
+    ChordPlayerHandler(jack_client_t * client, const std::string & filename, const int velocity);
 
     virtual void process(const jack_nframes_t nframes);
 
@@ -35,6 +35,7 @@ namespace ASI
   private:
 
     const std::string m_filename;
+    const int m_velocity;
 
     std::vector<ChordData> m_chords;
 
