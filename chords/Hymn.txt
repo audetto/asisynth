@@ -36,3 +36,27 @@ F2,Bbmaj/F
 F2,Fdom7
 Bb2,Bbsus4
 Bb2,Bbmaj
+
+# 3rd
+Bb2,Bbmaj
+A2,Fmaj/A
+G2,Gmin
+Eb2,Ebmaj
+Bb2,SKIP
+Bb2,Bbmaj
+
+F2,Fmaj
+C3,SKIP
+C3,Cmin7
+F2,Fdom7
+
+# 4th
+Bb2,Bbmaj
+A2,Fmaj/A
+G2,Gmin
+Eb2,Ebmaj
+
+F2,Bbmaj/F
+F2,Fdom7
+Bb2,Bbsus4
+Bb2,Bbmaj
