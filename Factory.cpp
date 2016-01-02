@@ -2,6 +2,7 @@
 #include "ModeHandler.h"
 #include "SuperLegatoHandler.h"
 #include "ChordPlayerHandler.h"
+#include "DisplayHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -46,6 +47,12 @@ namespace ASI
       ("chords:velocity", po::value<int>()->default_value(0), "Chord velocity (0 use trigger note's)");
     desc.add(chordDesc);
 
+    po::options_description displayDesc("Display");
+    displayDesc.add_options()
+      ("display", "Display")
+      ("display:file", po::value<std::string>()->default_value("-"), "Output filename");
+    desc.add(displayDesc);
+
     po::variables_map vm;
     try
     {
@@ -84,6 +91,12 @@ namespace ASI
 	const std::string filename = vm["chords:file"].as<std::string>();
 	const int velocity = vm["chords:velocity"].as<int>();
 	handlers.push_back(std::make_shared<ASI::ChordPlayerHandler>(client, filename, velocity));
+      }
+
+      if (vm.count("display"))
+      {
+	const std::string filename = vm["display:file"].as<std::string>();
+	handlers.push_back(std::make_shared<ASI::DisplayHandler>(client, filename));
       }
     }
     catch (po::error& e)

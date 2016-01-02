@@ -13,7 +13,8 @@ add_executable(asisynth
   InputOutputHandler
   Factory.cpp
   ModeHandler.cpp
-  SuperLegatoHandler.cpp)
+  SuperLegatoHandler.cpp
+  DisplayHandler.cpp)
 
 target_link_libraries(asisynth jack)
 target_link_libraries(asisynth boost_program_options)
