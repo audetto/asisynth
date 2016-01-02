@@ -43,6 +43,8 @@ namespace ASI
     size_t m_previous;
 
     void reset();
+    void setNext(const size_t next);
+
   };
 
 }

@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.3)
+
 project(asisynth)
 
 add_executable(asisynth
@@ -5,6 +7,7 @@ add_executable(asisynth
   I_JackHandler.cpp
   MidiEvent.cpp
   MidiPassThrough.cpp
+  MidiUtils.cpp
   ChordPlayerHandler.cpp
   EchoHandler.cpp
   InputOutputHandler

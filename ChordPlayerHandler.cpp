@@ -1,6 +1,7 @@
 #include "ChordPlayerHandler.h"
 #include "MidiCommands.h"
 #include "MidiPassThrough.h"
+#include "MidiUtils.h"
 
 #include <fstream>
 #include <iostream>
@@ -105,7 +106,7 @@ namespace
       data.trigger = -1;
 
       // this will never be checked directly
-      // but avoids if statements later
+      // but avoids "if" statements later
       chords.push_back(data);
     }
 
@@ -198,15 +199,39 @@ namespace ASI
     m_outputPort = jack_port_register (m_client, "chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
     populateChords(m_filename, m_chords);
-    printChords(m_chords);
+
+    // this is for debugging only
+    if (false) printChords(m_chords);
 
     reset();
+  }
+
+  void ChordPlayerHandler::setNext(const size_t next)
+  {
+    if (m_next != next)
+    {
+      m_next = next;
+
+      if (m_next != m_chords.size())
+      {
+	const ChordData & next = m_chords[m_next];
+	std::cout << "Waiting for [" << m_next << "]: ";
+	streamNoteName(std::cout, next.trigger, BEST);
+
+	// write some more " " to clear longer lines followed by shorter ones
+	std::cout << " (" << (int)next.trigger << ")           \r" << std::flush;
+      }
+      else
+      {
+	std::cout << "DONE. Press sostenuto pedal to restart" << std::endl;
+      }
+    }
   }
 
   void ChordPlayerHandler::reset()
   {
     m_previous = 0;
-    m_next = 1;
+    setNext(1);
   }
 
   void ChordPlayerHandler::process(const jack_nframes_t nframes)
@@ -220,11 +245,6 @@ namespace ASI
 
     for(size_t i = 0; i < eventCount; ++i)
     {
-      if (m_next == m_chords.size())
-      {
-	break;
-      }
-
       jack_midi_event_t inEvent;
       jack_midi_event_get(&inEvent, inPortBuf, i);
 
@@ -237,6 +257,11 @@ namespace ASI
 	reset();
       }
 
+      if (m_next == m_chords.size())
+      {
+	break;
+      }
+
       if (m_active)
       {
 	const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
@@ -246,17 +271,16 @@ namespace ASI
 	  const ChordData & next = m_chords[m_next];
 
 	  const jack_midi_data_t note = inEvent.buffer[1];
-	  std::cout << "t: " << (int)next.trigger << ", n: " << (int)note << std::endl;
+
 	  if (note == next.trigger)
 	  {
 	    if (!next.skip)
 	    {
-	      // -1 is safe as there is an initial one
 	      execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
 	      execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
 	      m_previous = m_next;
 	    }
-	    ++m_next;
+	    setNext(m_next + 1);
 	  }
 	}
       }
