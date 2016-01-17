@@ -136,7 +136,7 @@ namespace
 	{
 	  data.skip = true;
 	}
-	else
+	else if (!chord.empty())
 	{
 	  createChord(chord, data.notes);
 	}
