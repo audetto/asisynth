@@ -269,19 +269,24 @@ namespace ASI
 
 	if (cmd == MIDI_NOTEON)
 	{
-	  const ChordData & next = m_chords[m_next];
+	  const jack_midi_data_t velocity = inEvent.buffer[2];
 
-	  const jack_midi_data_t note = inEvent.buffer[1];
-
-	  if (note == next.trigger)
+	  // MuseScore sends velocity = 0 rather than NOTEOFF
+	  if (velocity > 0)
 	  {
-	    if (!next.skip)
+	    const jack_midi_data_t note = inEvent.buffer[1];
+
+	    const ChordData & next = m_chords[m_next];
+	    if (note == next.trigger)
 	    {
-	      execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
-	      execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
-	      m_previous = m_next;
+	      if (!next.skip)
+	      {
+		execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
+		execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
+		m_previous = m_next;
+	      }
+	      setNext(m_next + 1);
 	    }
-	    setNext(m_next + 1);
 	  }
 	}
       }
