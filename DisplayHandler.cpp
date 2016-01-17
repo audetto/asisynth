@@ -26,7 +26,7 @@ namespace ASI
     }
 
     // write header
-    *m_output << "Time,Code,Command,Note,Name,On,Duration" << std::endl;
+    *m_output << "Time,Code,Command,Note,Velocity,Name,On,Duration" << std::endl;
   }
 
   void DisplayHandler::process(const jack_nframes_t nframes)
@@ -61,19 +61,22 @@ namespace ASI
       case MIDI_NOTEON:
 	{
 	  const jack_midi_data_t note = inEvent.buffer[1];
+	  const jack_midi_data_t velocity = inEvent.buffer[2];
 	  m_onTimes[note] = time;
 
-	  *m_output << "," << (int)cmd << "," << (int)note << ",";
+	  *m_output << "," << (int)cmd << "," << (int)note << "," << (int)velocity << ",";
 	  streamNoteName(*m_output, note, BEST);
 	  break;
 	}
       case MIDI_NOTEOFF:
 	{
 	  const jack_midi_data_t note = inEvent.buffer[1];
+	  const jack_midi_data_t velocity = inEvent.buffer[2];
+
 	  const double onTime = m_onTimes[note];
 	  const double duration = time - onTime;
 
-	  *m_output << "," << (int)cmd << "," << (int)note << ",";
+	  *m_output << "," << (int)cmd << "," << (int)note << "," << (int)velocity << ",";
 	  streamNoteName(*m_output, note, BEST);
 	  *m_output << "," << onTime << "," << duration;
 	  break;
@@ -84,6 +87,11 @@ namespace ASI
 	  const jack_midi_data_t value = inEvent.buffer[2];
 	  *m_output << "," << (int)cmd << "," << (int)control << "," << (int)value;
 	  break;
+	}
+      case MIDI_PC:
+	{
+	  const jack_midi_data_t program = inEvent.buffer[1];
+	  *m_output << "," << (int)cmd << "," << (int)program;
 	}
       }
 
