@@ -1,81 +1,81 @@
 # 17
-Bb2,Bbmaj
-A2,Fmaj/A
-G2,Gmin
-Eb2,Ebmaj
-Bb2,SKIP
-Bb2,Bbmaj
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin
+Eb1,Ebmaj
+Bb1,SKIP
+Bb1,Bbmaj
 
 # 22 - 1
-F2,Fmaj
-C3,SKIP
-C3,Cmin7
-F2,Fsus4
+F1,Fmaj
+C2,SKIP
+C2,Cmin7
+F1,Fsus4
 
 # 25 - repeat
-Bb2,Bbmaj
-A2,Fmaj/A
-G2,Gmin
-Eb2,Ebmaj
-Bb2,SKIP
-Bb2,Bbmaj
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin
+Eb1,Ebmaj
+Bb1,SKIP
+Bb1,Bbmaj
 
 # 30 - 2
-F2,Fmaj
-C3,SKIP
-C3,Cmin7
-F2,Fdom7
+F1,Fmaj
+C2,SKIP
+C2,Cmin7
+F1,Fdom7
 
 # 33
-Bb2,Bbmaj
-A2,Fmaj/A
-G2,Gmin
-Eb2,Ebmaj
-F2,Bbmaj/F
-F2,Fdom7
-Bb2,Bbsus4
-Bb2,Bbmaj
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin
+Eb1,Ebmaj
+F1,Bbmaj/F
+F1,Fdom7
+Bb1,Bbsus4
+Bb1,Bbmaj
 
 # 41
-Bb2,Bbmaj
-A2,Fmaj/A
-G2,Gmin
-Eb2,Ebmaj
-Bb2,SKIP
-Bb2,Bbmaj
-F2,Fmaj
-C3,SKIP
-C3,Cmin7
-F2,Fdom7
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin
+Eb1,Ebmaj
+Bb1,SKIP
+Bb1,Bbmaj
+F1,Fmaj
+C2,SKIP
+C2,Cmin7
+F1,Fdom7
 
 # 49
-Bb2,Bbmaj
-A2,Fmaj/A
-G2,Gmin
-Eb2,Ebmaj
-F2,Bbmaj/F
-F2,Fdom7
-Bb2,Bbsus4
-Bb2,Bbmaj
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin
+Eb1,Ebmaj
+F1,Bbmaj/F
+F1,Fdom7
+Bb1,Bbsus4
+Bb1,Bbmaj
 
 # 57
-C3,Cmin7
-F2,Fmaj
-C3,SKIP
-C3,Cmin7
-F2,Fmaj
-C3,SKIP
-C3,Cmin7
-F2,Fdom7
-F2,Fdom7
+C2,Cmin7
+F1,Fmaj
+C2,SKIP
+C2,Cmin7
+F1,Fmaj
+C2,SKIP
+C2,Cmin7
+F1,Fdom7
+F1,Fdom7
 
 #65
-Bb2,Bbmaj
-A2,Fmaj/A
-G2,Gmin
-Eb2,Ebmaj
-F2,Bbmaj/F
-F2,Fdom7
-Bb2,Bbmaj
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin
+Eb1,Ebmaj
+F1,Bbmaj/F
+F1,Fdom7
+Bb1,Bbmaj
 
 #72

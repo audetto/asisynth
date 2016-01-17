@@ -46,7 +46,8 @@ namespace
     const std::string oct = m[3].str();
 
     const int octave = std::stoi(oct);
-    const int root = (octave + 1) * 12;
+    // convention is MIDDLE C = C3
+    const int root = (octave + 2) * 12;
 
     const int pos = getRootNote(note, alt, root);
 
