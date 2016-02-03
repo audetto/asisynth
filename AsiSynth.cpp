@@ -97,11 +97,11 @@ int main(int argc, char **args)
     return 0;
   }
 
-  jack_set_process_callback(client, process, &handlers);
+  jack_set_process_callback(client, process, &data);
 
-  jack_set_sample_rate_callback(client, sampleRate, &handlers);
+  jack_set_sample_rate_callback(client, sampleRate, &data);
 
-  jack_on_shutdown(client, shutdown, &handlers);
+  jack_on_shutdown(client, shutdown, &data);
 
   signal(SIGINT, &signalHandler);
   signal(SIGTERM, &signalHandler);
