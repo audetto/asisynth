@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <chrono>
 
 #include <jack/jack.h>
 #include <jack/midiport.h>
@@ -19,6 +20,10 @@ namespace
 
   struct ClientData
   {
+    double time;
+    jack_nframes_t frames;
+    jack_nframes_t sr;
+
     Handlers_t handlers;
     std::atomic<bool> alive;
   };
@@ -29,6 +34,7 @@ namespace
 
   int process(jack_nframes_t nframes, void *arg)
   {
+    auto t0 = std::chrono::high_resolution_clock::now();
     ClientData & data = *reinterpret_cast<ClientData *>(arg);
     Handlers_t & handlers = data.handlers;
 
@@ -36,6 +42,12 @@ namespace
     {
       handler->process(nframes);
     }
+    auto t1 = std::chrono::high_resolution_clock::now();
+
+    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
+
+    data.frames += nframes;
+    data.time += elapsed.count();
     return 0;
   }
 
@@ -48,6 +60,8 @@ namespace
     {
       handler->sampleRate(nframes);
     }
+
+    data.sr = nframes;
     return 0;
   }
 
@@ -69,6 +83,18 @@ namespace
     data.alive = false;
   }
 
+  void printStatistics(const ClientData & data)
+  {
+    const double seconds = data.time / 1000000.0;
+    const double jack = double(data.frames) / double(data.sr);
+    const double load = seconds / jack;
+
+    std::cout << "Frames: " << data.frames << std::endl;
+    std::cout << "Seconds: " << seconds << std::endl;
+    std::cout << "Jack: " << jack << std::endl;
+    std::cout << "Load: " << load * 100.0 << " %" << std::endl;
+  }
+
 }
 
 int main(int argc, char **args)
@@ -84,6 +110,9 @@ int main(int argc, char **args)
 
   std::vector<std::shared_ptr<ASI::I_JackHandler> > & handlers = data.handlers;
   data.alive = false;
+  data.time = 0.0;
+  data.frames = 0;
+  data.sr = 0;
 
   if (!ASI::createHandlers(argc, args, client, handlers))
   {
@@ -121,6 +150,8 @@ int main(int argc, char **args)
 
   // detach all ports
   jack_client_close(client);
+
+  printStatistics(data);
 
   return 0;
 }

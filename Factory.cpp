@@ -3,6 +3,7 @@
 #include "SuperLegatoHandler.h"
 #include "ChordPlayerHandler.h"
 #include "DisplayHandler.h"
+#include "SynthesiserHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -53,6 +54,11 @@ namespace ASI
       ("display:file", po::value<std::string>()->default_value("-"), "Output filename");
     desc.add(displayDesc);
 
+    po::options_description synthesiserDesc("Synthesiser");
+    synthesiserDesc.add_options()
+      ("synth", "Synthesiser");
+    desc.add(synthesiserDesc);
+
     po::variables_map vm;
     try
     {
@@ -97,6 +103,11 @@ namespace ASI
       {
 	const std::string filename = vm["display:file"].as<std::string>();
 	handlers.push_back(std::make_shared<ASI::DisplayHandler>(client, filename));
+      }
+
+      if (vm.count("synth"))
+      {
+	handlers.push_back(std::make_shared<ASI::SynthesiserHandler>(client));
       }
     }
     catch (po::error& e)

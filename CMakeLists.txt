@@ -14,6 +14,7 @@ add_executable(asisynth
   Factory.cpp
   ModeHandler.cpp
   SuperLegatoHandler.cpp
+  SynthesiserHandler.cpp
   DisplayHandler.cpp)
 
 target_link_libraries(asisynth jack)
