@@ -35,20 +35,16 @@ namespace ASI
     m_inputPort = jack_port_register(m_client, "synth_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register(m_client, "synth_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
-    myHarmonics = {
+    myParameters.harmonics = {
       {1.0, 1.00, 0.0, SINE},
-      {1.0, 1.00, 0.25, TRIANGLE},
-      {2.0, 0.30, 0.0, SINE},
-      {2.0, 0.30, 0.0, TRIANGLE},
-      {3.0, 0.15, 0.0, SINE},
-      {3.0, 0.15, 0.0, TRIANGLE},
-      {4.0, 0.05, 0.0, SINE},
-      {4.0, 0.05, 0.0, TRIANGLE},
-      {8.0, 0.01, 0.0, SINE},
-      {8.0, 0.01, 0.0, TRIANGLE},
+      {1.0, 1.00, 0.0, TRIANGLE},
+      {2.0, 0.10, 0.0, SINE},
+      {2.0, 0.10, 0.0, TRIANGLE},
+      {3.0, 0.05, 0.0, SINE},
+      {3.0, 0.05, 0.0, TRIANGLE},
     };
 
-    myParameters.volume = 0.1;
+    myParameters.volume = 0.2;
     myParameters.attackTime = 0.05;
     myParameters.sustainTime = 5.0;
     myParameters.decayTime = 0.1;
@@ -56,7 +52,7 @@ namespace ASI
 
     myTime = 0;
 
-    myNotes.resize(128);
+    myNotes.resize(32);
     for (Note & note : myNotes)
     {
       note.status = EMPTY;
@@ -171,7 +167,7 @@ namespace ASI
 	const jack_nframes_t tInFrames = time - note.t0;
 	const double t = tInFrames * myTimeMultiplier;
 
-	for (const Harmonic & h : myHarmonics)
+	for (const Harmonic & h : myParameters.harmonics)
 	{
 	  const double frequency = note.frequency * h.mult;
 	  const double x = frequency * t + h.phase;
@@ -200,7 +196,7 @@ namespace ASI
 
   void SynthesiserHandler::addNote(const jack_midi_data_t n, const jack_nframes_t time)
   {
-    if (myHarmonics.empty())
+    if (myParameters.harmonics.empty())
     {
       return;
     }
@@ -208,7 +204,7 @@ namespace ASI
     const double base = std::pow(2.0, (n - 69) / 12.0) * 440.0;
 
     double total = 0.0;
-    for (const Harmonic & h : myHarmonics)
+    for (const Harmonic & h : myParameters.harmonics)
     {
       total += h.amplitude;
     }

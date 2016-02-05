@@ -72,15 +72,16 @@ namespace ASI
       double decayTime;
 
       double averageSize;     // low pass filter for ADSR
+
+      std::vector<Harmonic> harmonics;
     };
 
     jack_nframes_t myTime;
 
     Parameters myParameters;
 
+    // state / workspace
     std::vector<Note> myNotes;
-
-    std::vector<Harmonic> myHarmonics;
 
     double myAttackDelta;
     double mySustainDelta;
