@@ -95,6 +95,7 @@ namespace ASI
 
     void addNote(const jack_midi_data_t n, const jack_nframes_t time);
     void removeNote(const jack_midi_data_t n);
+    void removeAllNotes();
 
     void generateSample(const size_t n);
 

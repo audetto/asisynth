@@ -98,17 +98,33 @@ namespace ASI
       {
 	const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
 	const jack_midi_data_t n = inEvent.buffer[1];
+	const jack_midi_data_t velocity = inEvent.buffer[2];
 
 	switch (cmd)
 	{
 	case MIDI_NOTEON:
 	  {
-	    addNote(n, time);
+	    if (velocity == 0)
+	    {
+	      removeNote(n);
+	    }
+	    else
+	    {
+	      addNote(n, time);
+	    }
 	    break;
 	  }
 	case MIDI_NOTEOFF:
 	  {
 	    removeNote(n);
+	    break;
+	  }
+	case MIDI_CC:
+	  {
+	    if (n == 123)
+	    {
+	      removeAllNotes();
+	    }
 	    break;
 	  }
 	}
@@ -240,6 +256,14 @@ namespace ASI
       {
 	note.status = DECAY;
       }
+    }
+  }
+
+  void SynthesiserHandler::removeAllNotes()
+  {
+    for (Note & note : myNotes)
+    {
+      note.status = DECAY;
     }
   }
 
