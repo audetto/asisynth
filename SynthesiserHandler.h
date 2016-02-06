@@ -77,25 +77,25 @@ namespace ASI
       std::vector<Harmonic> harmonics;
     };
 
-    jack_nframes_t myTime;
+    jack_nframes_t m_time;
 
-    Parameters myParameters;
+    Parameters m_parameters;
 
     // state / workspace
-    std::vector<Note> myNotes;
+    std::vector<Note> m_notes;
 
     // table with 1 period of the note
-    std::vector<double> mySamples;
+    std::vector<double> m_samples;
 
-    double myAttackDelta;
-    double mySustainDelta;
-    double myDecayDelta;
-    double myTimeMultiplier;
-    double myInterpolationMultiplier;
+    double m_attackDelta;
+    double m_sustainDelta;
+    double m_decayDelta;
+    double m_timeMultiplier;
+    double m_interpolationMultiplier;
 
-    void addNote(const jack_midi_data_t n, const jack_nframes_t time);
-    void removeNote(const jack_midi_data_t n);
-    void removeAllNotes();
+    void noteOn(const jack_midi_data_t n, const jack_nframes_t time);
+    void noteOff(const jack_midi_data_t n);
+    void allNotesOff();
 
     void generateSample(const size_t n);
 

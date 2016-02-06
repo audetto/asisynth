@@ -44,25 +44,25 @@ namespace ASI
     m_inputPort = jack_port_register(m_client, "synth_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register(m_client, "synth_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
-    myParameters.harmonics = {
-      {1.0, 1.00, 0.0, SINE},
-      {1.0, 1.00, 0.0, TRIANGLE},
-      {2.0, 0.10, 0.0, SINE},
-      {2.0, 0.10, 0.0, TRIANGLE},
-      {3.0, 0.05, 0.0, SINE},
-      {3.0, 0.05, 0.0, TRIANGLE},
+    m_parameters.harmonics = {
+      {1, 1.00, 0.0, SINE},
+      {1, 1.00, 0.0, TRIANGLE},
+      {2, 0.10, 0.0, SINE},
+      {2, 0.10, 0.0, TRIANGLE},
+      {3, 0.05, 0.0, SINE},
+      {3, 0.05, 0.0, TRIANGLE},
     };
 
-    myParameters.volume = 0.2;
-    myParameters.attackTime = 0.05;
-    myParameters.sustainTime = 5.0;
-    myParameters.decayTime = 0.1;
-    myParameters.averageSize = 10.0;
+    m_parameters.volume = 0.2;
+    m_parameters.attackTime = 0.05;
+    m_parameters.sustainTime = 5.0;
+    m_parameters.decayTime = 0.1;
+    m_parameters.averageSize = 10.0;
 
-    myTime = 0;
+    m_time = 0;
 
-    myNotes.resize(32);
-    for (Note & note : myNotes)
+    m_notes.resize(32);
+    for (Note & note : m_notes)
     {
       note.status = EMPTY;
     }
@@ -80,7 +80,7 @@ namespace ASI
 
     // should we ask JACK for current time instead?
     // calling jack_last_frame_time(m_client);
-    jack_nframes_t framesAtStart = myTime;
+    jack_nframes_t framesAtStart = m_time;
 
     jack_nframes_t eventIndex = 0;
 
@@ -106,24 +106,24 @@ namespace ASI
 	  {
 	    if (velocity == 0)
 	    {
-	      removeNote(n);
+	      noteOff(n);
 	    }
 	    else
 	    {
-	      addNote(n, time);
+	      noteOn(n, time);
 	    }
 	    break;
 	  }
 	case MIDI_NOTEOFF:
 	  {
-	    removeNote(n);
+	    noteOff(n);
 	    break;
 	  }
 	case MIDI_CC:
 	  {
 	    if (n == 123)
 	    {
-	      removeAllNotes();
+	      allNotesOff();
 	    }
 	    break;
 	  }
@@ -137,13 +137,13 @@ namespace ASI
       }
 
       double total = 0.0;
-      for (Note & note : myNotes)
+      for (Note & note : m_notes)
       {
 	switch (note.status)
 	{
 	case ATTACK:
 	  {
-	    note.current += myAttackDelta;
+	    note.current += m_attackDelta;
 	    if (note.current >= 1.0)
 	    {
 	      note.current = 1.0;
@@ -153,7 +153,7 @@ namespace ASI
 	  }
 	case SUSTAIN:
 	  {
-	    note.current -= mySustainDelta;
+	    note.current -= m_sustainDelta;
 	    if (note.current <= 0.0)
 	    {
 	      note.current = 0.0;
@@ -163,7 +163,7 @@ namespace ASI
 	  }
 	case DECAY:
 	  {
-	    note.current -= myDecayDelta;
+	    note.current -= m_decayDelta;
 	    if (note.current <= 0.0)
 	    {
 	      note.current = 0.0;
@@ -187,30 +187,30 @@ namespace ASI
 
 	// this is a low pass filter to smooth the ADSR
 	// is it needed?
-	note.amplitude = (note.amplitude * myParameters.averageSize + note.current) / (myParameters.averageSize + 1.0);
+	note.amplitude = (note.amplitude * m_parameters.averageSize + note.current) / (m_parameters.averageSize + 1.0);
 
 	const jack_nframes_t tInFrames = time - note.t0;
-	const double t = tInFrames * myTimeMultiplier;
+	const double t = tInFrames * m_timeMultiplier;
 	const double x = note.frequency * t;
 
 	const double fx = x - size_t(x);
-	const size_t pos = size_t(fx * myInterpolationMultiplier);
-	const double w = mySamples[pos] * note.amplitude * note.volume;
+	const size_t pos = size_t(fx * m_interpolationMultiplier);
+	const double w = m_samples[pos] * note.amplitude * note.volume;
 	total += w;
 
       }
       outPortBuf[i] = total;
     }
 
-    myTime += nframes;
+    m_time += nframes;
   }
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
   {
-    myAttackDelta = 1.0 / myParameters.attackTime / nframes;
-    myDecayDelta = 1.0 / myParameters.decayTime / nframes;
-    mySustainDelta = 1.0 / myParameters.sustainTime / nframes;
-    myTimeMultiplier = 1.0 / nframes;
+    m_attackDelta = 1.0 / m_parameters.attackTime / nframes;
+    m_decayDelta = 1.0 / m_parameters.decayTime / nframes;
+    m_sustainDelta = 1.0 / m_parameters.sustainTime / nframes;
+    m_timeMultiplier = 1.0 / nframes;
 
     generateSample(nframes);
   }
@@ -219,18 +219,13 @@ namespace ASI
   {
   }
 
-  void SynthesiserHandler::addNote(const jack_midi_data_t n, const jack_nframes_t time)
+  void SynthesiserHandler::noteOn(const jack_midi_data_t n, const jack_nframes_t time)
   {
-    if (myParameters.harmonics.empty())
-    {
-      return;
-    }
-
     const double base = std::pow(2.0, (n - 69) / 12.0) * 440.0;
 
-    const double volume = myParameters.volume; // * velocity
+    const double volume = m_parameters.volume; // * velocity
 
-    for (Note & note : myNotes)
+    for (Note & note : m_notes)
     {
       if (note.status == EMPTY)
       {
@@ -248,9 +243,9 @@ namespace ASI
     }
   }
 
-  void SynthesiserHandler::removeNote(const jack_midi_data_t n)
+  void SynthesiserHandler::noteOff(const jack_midi_data_t n)
   {
-    for (Note & note : myNotes)
+    for (Note & note : m_notes)
     {
       if (note.n == n)
       {
@@ -259,9 +254,9 @@ namespace ASI
     }
   }
 
-  void SynthesiserHandler::removeAllNotes()
+  void SynthesiserHandler::allNotesOff()
   {
-    for (Note & note : myNotes)
+    for (Note & note : m_notes)
     {
       note.status = DECAY;
     }
@@ -269,12 +264,12 @@ namespace ASI
 
   void SynthesiserHandler::generateSample(const size_t n)
   {
-    mySamples.resize(n + 1);
+    m_samples.resize(n + 1);
 
-    myInterpolationMultiplier = n;
+    m_interpolationMultiplier = n;
 
     double sumOfAmplitudes = 0.0;
-    for (const Harmonic & h : myParameters.harmonics)
+    for (const Harmonic & h : m_parameters.harmonics)
     {
       sumOfAmplitudes += h.amplitude;
     }
@@ -286,7 +281,7 @@ namespace ASI
       const double t = i * coeff;
 
       double total = 0.0;
-      for (const Harmonic & h : myParameters.harmonics)
+      for (const Harmonic & h : m_parameters.harmonics)
       {
 	const double frequency = 1.0 * h.mult;
 	const double x = t * frequency + h.phase;
@@ -294,11 +289,11 @@ namespace ASI
 	const double w = wave(x, h.type) * amplitude;
 	total += w;
       }
-      mySamples[i] = total;
+      m_samples[i] = total;
     }
 
     // just in case the interpolation ends up in the last point
-    mySamples.back() = mySamples.front();
+    m_samples.back() = m_samples.front();
   }
 
 
