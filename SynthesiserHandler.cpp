@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <iomanip>
+#include <random>
 
 namespace
 {
@@ -22,6 +23,14 @@ namespace
   double square(double x)
   {
     return x - std::floor(x) > 0.5 ? 1.0 : -1.0;
+  }
+
+  double noise()
+  {
+    static std::default_random_engine generator;
+    static std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+
+    return distribution(generator);
   }
 
 }
@@ -277,6 +286,7 @@ namespace ASI
     case SAWTOOTH: return sawtooth(x);
     case TRIANGLE: return triangle(x);
     case SQUARE: return square(x);
+    case NOISE: return noise();
     }
   }
 

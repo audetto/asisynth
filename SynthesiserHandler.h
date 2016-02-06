@@ -41,7 +41,8 @@ namespace ASI
       SINE,
       SAWTOOTH,
       TRIANGLE,
-      SQUARE
+      SQUARE,
+      NOISE
     };
 
     struct Note
