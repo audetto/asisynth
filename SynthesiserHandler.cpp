@@ -69,6 +69,121 @@ namespace ASI
 
   }
 
+  void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
+  {
+    if (eventIndex < eventCount && event.time == localTime)
+    {
+      const jack_midi_data_t cmd = event.buffer[0] & 0xf0;
+      const jack_midi_data_t n = event.buffer[1];
+      const jack_midi_data_t velocity = event.buffer[2];
+
+      switch (cmd)
+      {
+      case MIDI_NOTEON:
+	{
+	  if (velocity == 0)
+	  {
+	    noteOff(n);
+	  }
+	  else
+	  {
+	    noteOn(n, absTime);
+	  }
+	  break;
+	}
+      case MIDI_NOTEOFF:
+	{
+	  noteOff(n);
+	  break;
+	}
+      case MIDI_CC:
+	{
+	  if (n == 123)
+	  {
+	    allNotesOff();
+	  }
+	  break;
+	}
+      }
+
+      ++eventIndex;
+      if (eventIndex < eventCount)
+      {
+	jack_midi_event_get(&event, portBuf, eventIndex);
+      }
+    }
+
+  }
+
+  double SynthesiserHandler::processNotes(const jack_nframes_t absTime)
+  {
+    double total = 0.0;
+    for (Note & note : m_notes)
+    {
+      switch (note.status)
+      {
+      case ATTACK:
+	{
+	  note.current += m_attackDelta;
+	  if (note.current >= 1.0)
+	  {
+	    note.current = 1.0;
+	    note.status = SUSTAIN;
+	  }
+	  break;
+	}
+      case SUSTAIN:
+	{
+	  note.current -= m_sustainDelta;
+	  if (note.current <= 0.0)
+	  {
+	    note.current = 0.0;
+	    note.status = OFF;
+	  }
+	  break;
+	}
+      case DECAY:
+	{
+	  note.current -= m_decayDelta;
+	  if (note.current <= 0.0)
+	  {
+	    note.current = 0.0;
+	    note.status = OFF;
+	  }
+	  break;
+	}
+      case OFF:
+	{
+	  if (note.amplitude <= 0.00000001)
+	  {
+	    note.status = EMPTY;
+	  }
+	  break;
+	}
+      case EMPTY:
+	{
+	  continue;
+	}
+      };
+
+      // this is a low pass filter to smooth the ADSR
+      // is it needed?
+      note.amplitude = (note.amplitude * m_parameters.averageSize + note.current) / (m_parameters.averageSize + 1.0);
+
+      const jack_nframes_t tInFrames = absTime - note.t0;
+      const double t = tInFrames * m_timeMultiplier;
+      const double x = note.frequency * t;
+
+      const double fx = x - size_t(x);
+      const size_t pos = size_t(fx * m_interpolationMultiplier);
+      const double w = m_samples[pos] * note.amplitude * note.volume;
+      total += w;
+
+    }
+
+    return total;
+  }
+
   void SynthesiserHandler::process(const jack_nframes_t nframes)
   {
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
@@ -92,114 +207,12 @@ namespace ASI
 
     for(size_t i = 0; i < nframes; ++i)
     {
-      const jack_nframes_t time = framesAtStart + i;
+      const jack_nframes_t absTime = framesAtStart + i;
 
-      if (eventIndex < eventCount && inEvent.time == i)
-      {
-	const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
-	const jack_midi_data_t n = inEvent.buffer[1];
-	const jack_midi_data_t velocity = inEvent.buffer[2];
+      processMIDIEvent(eventCount, i, absTime, inPortBuf, eventIndex, inEvent);
+      const double w = processNotes(absTime);
 
-	switch (cmd)
-	{
-	case MIDI_NOTEON:
-	  {
-	    if (velocity == 0)
-	    {
-	      noteOff(n);
-	    }
-	    else
-	    {
-	      noteOn(n, time);
-	    }
-	    break;
-	  }
-	case MIDI_NOTEOFF:
-	  {
-	    noteOff(n);
-	    break;
-	  }
-	case MIDI_CC:
-	  {
-	    if (n == 123)
-	    {
-	      allNotesOff();
-	    }
-	    break;
-	  }
-	}
-
-	++eventIndex;
-	if (eventIndex < eventCount)
-	{
-	  jack_midi_event_get(&inEvent, inPortBuf, eventIndex);
-	}
-      }
-
-      double total = 0.0;
-      for (Note & note : m_notes)
-      {
-	switch (note.status)
-	{
-	case ATTACK:
-	  {
-	    note.current += m_attackDelta;
-	    if (note.current >= 1.0)
-	    {
-	      note.current = 1.0;
-	      note.status = SUSTAIN;
-	    }
-	    break;
-	  }
-	case SUSTAIN:
-	  {
-	    note.current -= m_sustainDelta;
-	    if (note.current <= 0.0)
-	    {
-	      note.current = 0.0;
-	      note.status = OFF;
-	    }
-	    break;
-	  }
-	case DECAY:
-	  {
-	    note.current -= m_decayDelta;
-	    if (note.current <= 0.0)
-	    {
-	      note.current = 0.0;
-	      note.status = OFF;
-	    }
-	    break;
-	  }
-	case OFF:
-	  {
-	    if (note.amplitude <= 0.00000001)
-	    {
-	      note.status = EMPTY;
-	    }
-	    break;
-	  }
-	case EMPTY:
-	  {
-	    continue;
-	  }
-	};
-
-	// this is a low pass filter to smooth the ADSR
-	// is it needed?
-	note.amplitude = (note.amplitude * m_parameters.averageSize + note.current) / (m_parameters.averageSize + 1.0);
-
-	const jack_nframes_t tInFrames = time - note.t0;
-	const double t = tInFrames * m_timeMultiplier;
-	const double x = note.frequency * t;
-
-	const double fx = x - size_t(x);
-	const size_t pos = size_t(fx * m_interpolationMultiplier);
-	const double w = m_samples[pos] * note.amplitude * note.volume;
-	total += w;
-
-      }
-      outPortBuf[i] = total;
+      outPortBuf[i] = w;
     }
 
     m_time += nframes;

@@ -97,6 +97,9 @@ namespace ASI
     void noteOff(const jack_midi_data_t n);
     void allNotesOff();
 
+    void processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event);
+    double processNotes(const jack_nframes_t absTime);
+
     void generateSample(const size_t n);
 
     static double wave(double x, Wave type);
