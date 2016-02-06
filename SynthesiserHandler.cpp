@@ -166,15 +166,13 @@ namespace ASI
 
 	const jack_nframes_t tInFrames = time - note.t0;
 	const double t = tInFrames * myTimeMultiplier;
+	const double x = note.frequency * t;
 
-	for (const Harmonic & h : myParameters.harmonics)
-	{
-	  const double frequency = note.frequency * h.mult;
-	  const double x = frequency * t + h.phase;
-	  const double volume = note.volume * h.amplitude;
-	  const double w = wave(x, h.type) * note.amplitude * volume;
-	  total += w;
-	}
+	const double fx = x - size_t(x);
+	const size_t pos = size_t(fx * myInterpolationMultiplier);
+	const double w = mySamples[pos] * note.amplitude * note.volume;
+	total += w;
+
       }
       outPortBuf[i] = total;
     }
@@ -188,6 +186,8 @@ namespace ASI
     myDecayDelta = 1.0 / myParameters.decayTime / nframes;
     mySustainDelta = 1.0 / myParameters.sustainTime / nframes;
     myTimeMultiplier = 1.0 / nframes;
+
+    generateSample(nframes);
   }
 
   void SynthesiserHandler::shutdown()
@@ -203,13 +203,7 @@ namespace ASI
 
     const double base = std::pow(2.0, (n - 69) / 12.0) * 440.0;
 
-    double total = 0.0;
-    for (const Harmonic & h : myParameters.harmonics)
-    {
-      total += h.amplitude;
-    }
-
-    const double volume = myParameters.volume / total;
+    const double volume = myParameters.volume; // * velocity
 
     for (Note & note : myNotes)
     {
@@ -239,6 +233,41 @@ namespace ASI
       }
     }
   }
+
+  void SynthesiserHandler::generateSample(const size_t n)
+  {
+    mySamples.resize(n + 1);
+
+    myInterpolationMultiplier = n;
+
+    double sumOfAmplitudes = 0.0;
+    for (const Harmonic & h : myParameters.harmonics)
+    {
+      sumOfAmplitudes += h.amplitude;
+    }
+
+    const double coeff = 1.0 / n;
+
+    for (size_t i = 0; i < n; ++i)
+    {
+      const double t = i * coeff;
+
+      double total = 0.0;
+      for (const Harmonic & h : myParameters.harmonics)
+      {
+	const double frequency = 1.0 * h.mult;
+	const double x = t * frequency + h.phase;
+	const double amplitude = h.amplitude / sumOfAmplitudes;
+	const double w = wave(x, h.type) * amplitude;
+	total += w;
+      }
+      mySamples[i] = total;
+    }
+
+    // just in case the interpolation ends up in the last point
+    mySamples.back() = mySamples.front();
+  }
+
 
   double SynthesiserHandler::wave(double x, Wave type)
   {

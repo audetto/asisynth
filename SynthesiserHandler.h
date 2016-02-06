@@ -58,7 +58,7 @@ namespace ASI
 
     struct Harmonic
     {
-      double mult;
+      size_t mult;
       double amplitude;
       double phase;
       Wave type;
@@ -83,13 +83,19 @@ namespace ASI
     // state / workspace
     std::vector<Note> myNotes;
 
+    // table with 1 period of the note
+    std::vector<double> mySamples;
+
     double myAttackDelta;
     double mySustainDelta;
     double myDecayDelta;
     double myTimeMultiplier;
+    double myInterpolationMultiplier;
 
     void addNote(const jack_midi_data_t n, const jack_nframes_t time);
     void removeNote(const jack_midi_data_t n);
+
+    void generateSample(const size_t n);
 
     static double wave(double x, Wave type);
   };
