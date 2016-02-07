@@ -56,7 +56,8 @@ namespace ASI
 
     po::options_description synthesiserDesc("Synthesiser");
     synthesiserDesc.add_options()
-      ("synth", "Synthesiser");
+      ("synth", "Synthesiser")
+      ("synth:params", po::value<std::string>(), "Prameters (json)");
     desc.add(synthesiserDesc);
 
     po::variables_map vm;
@@ -107,7 +108,8 @@ namespace ASI
 
       if (vm.count("synth"))
       {
-	handlers.push_back(std::make_shared<ASI::SynthesiserHandler>(client));
+	const std::string parametersFile = vm["synth:params"].as<std::string>();
+	handlers.push_back(std::make_shared<ASI::SynthesiserHandler>(client, parametersFile));
       }
     }
     catch (po::error& e)

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <iomanip>
 #include <random>
+#include <iostream>
 
 namespace
 {
@@ -38,35 +39,28 @@ namespace
 namespace ASI
 {
 
-  SynthesiserHandler::SynthesiserHandler(jack_client_t * client)
-    : InputOutputHandler(client)
+  SynthesiserHandler::SynthesiserHandler(jack_client_t * client, const std::string & parametersFile)
+    : InputOutputHandler(client), m_parametersFile(parametersFile)
   {
     m_inputPort = jack_port_register(m_client, "synth_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register(m_client, "synth_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
-    m_parameters.harmonics = {
-      {1, 1.00, 0.0, SINE},
-      {1, 1.00, 0.0, TRIANGLE},
-      {2, 0.10, 0.0, SINE},
-      {2, 0.10, 0.0, TRIANGLE},
-      {3, 0.05, 0.0, SINE},
-      {3, 0.05, 0.0, TRIANGLE},
-    };
-
-    m_parameters.volume = 0.2;
-    m_parameters.attackTime = 0.05;
-    m_parameters.sustainTime = 5.0;
-    m_parameters.decayTime = 0.1;
-    m_parameters.averageSize = 10.0;
-
     m_time = 0;
 
-    m_notes.resize(32);
+    loadParameters();
+  }
+
+  void SynthesiserHandler::loadParameters()
+  {
+    const std::shared_ptr<const Parameters> parameters = loadSynthParameters(m_parametersFile);
+
+    m_parameters = parameters;
+
+    m_notes.resize(m_parameters->poliphony);
     for (Note & note : m_notes)
     {
       note.status = EMPTY;
     }
-
   }
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
@@ -168,7 +162,7 @@ namespace ASI
 
       // this is a low pass filter to smooth the ADSR
       // is it needed?
-      note.amplitude = (note.amplitude * m_parameters.averageSize + note.current) / (m_parameters.averageSize + 1.0);
+      note.amplitude = (note.amplitude * m_parameters->averageSize + note.current) / (m_parameters->averageSize + 1.0);
 
       const jack_nframes_t tInFrames = absTime - note.t0;
       const double t = tInFrames * m_timeMultiplier;
@@ -220,9 +214,9 @@ namespace ASI
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
   {
-    m_attackDelta = 1.0 / m_parameters.attackTime / nframes;
-    m_decayDelta = 1.0 / m_parameters.decayTime / nframes;
-    m_sustainDelta = 1.0 / m_parameters.sustainTime / nframes;
+    m_attackDelta = 1.0 / m_parameters->attackTime / nframes;
+    m_decayDelta = 1.0 / m_parameters->decayTime / nframes;
+    m_sustainDelta = 1.0 / m_parameters->sustainTime / nframes;
     m_timeMultiplier = 1.0 / nframes;
 
     generateSample(nframes);
@@ -236,7 +230,7 @@ namespace ASI
   {
     const double base = std::pow(2.0, (n - 69) / 12.0) * 440.0;
 
-    const double volume = m_parameters.volume; // * velocity
+    const double volume = m_parameters->volume; // * velocity
 
     for (Note & note : m_notes)
     {
@@ -254,6 +248,8 @@ namespace ASI
 	return;
       }
     }
+
+    std::cerr << "Max polyphony!" << std::endl;
   }
 
   void SynthesiserHandler::noteOff(const jack_midi_data_t n)
@@ -282,7 +278,7 @@ namespace ASI
     m_interpolationMultiplier = n;
 
     double sumOfAmplitudes = 0.0;
-    for (const Harmonic & h : m_parameters.harmonics)
+    for (const Harmonic & h : m_parameters->harmonics)
     {
       sumOfAmplitudes += h.amplitude;
     }
@@ -294,7 +290,7 @@ namespace ASI
       const double t = i * coeff;
 
       double total = 0.0;
-      for (const Harmonic & h : m_parameters.harmonics)
+      for (const Harmonic & h : m_parameters->harmonics)
       {
 	const double frequency = 1.0 * h.mult;
 	const double x = t * frequency + h.phase;

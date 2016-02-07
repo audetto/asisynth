@@ -2,6 +2,7 @@
 
 #include "InputOutputHandler.h"
 #include "MidiEvent.h"
+#include "SynthParameters.h"
 
 #include <jack/midiport.h>
 #include <list>
@@ -17,7 +18,7 @@ namespace ASI
   {
   public:
 
-    SynthesiserHandler(jack_client_t * client);
+    SynthesiserHandler(jack_client_t * client, const std::string & parametersFile);
 
     virtual void process(const jack_nframes_t nframes);
 
@@ -36,15 +37,6 @@ namespace ASI
       EMPTY                    // slot not used
     };
 
-    enum Wave
-    {
-      SINE,
-      SAWTOOTH,
-      TRIANGLE,
-      SQUARE,
-      NOISE
-    };
-
     struct Note
     {
       jack_midi_data_t n;     // MIDI number
@@ -57,29 +49,11 @@ namespace ASI
       double amplitude;       // smooth ADSR
     };
 
-    struct Harmonic
-    {
-      size_t mult;
-      double amplitude;
-      double phase;
-      Wave type;
-    };
-
-    struct Parameters
-    {
-      double volume;          // note volume
-      double attackTime;
-      double sustainTime;
-      double decayTime;
-
-      double averageSize;     // low pass filter for ADSR
-
-      std::vector<Harmonic> harmonics;
-    };
+    const std::string m_parametersFile;
 
     jack_nframes_t m_time;
 
-    Parameters m_parameters;
+    std::shared_ptr<const Parameters> m_parameters;
 
     // state / workspace
     std::vector<Note> m_notes;
@@ -99,6 +73,8 @@ namespace ASI
 
     void processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event);
     double processNotes(const jack_nframes_t absTime);
+
+    void loadParameters();
 
     void generateSample(const size_t n);
 
