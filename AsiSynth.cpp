@@ -20,7 +20,8 @@ namespace
 
   struct ClientData
   {
-    double time;
+    size_t time;
+    double maxLoad; // nedd to "* sr / 1000000.0" later
     jack_nframes_t frames;
     jack_nframes_t sr;
 
@@ -44,10 +45,14 @@ namespace
     }
     auto t1 = std::chrono::high_resolution_clock::now();
 
-    auto elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
+    const size_t elapsed = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
 
     data.frames += nframes;
-    data.time += elapsed.count();
+    data.time += elapsed;
+
+    const double load = double(elapsed) / double(nframes);
+
+    data.maxLoad = std::max(data.maxLoad, load);
     return 0;
   }
 
@@ -89,10 +94,14 @@ namespace
     const double jack = double(data.frames) / double(data.sr);
     const double load = seconds / jack;
 
+    const double maxLoad = data.maxLoad * data.sr / 1000000.0;
+
+    std::cout << std::endl;
     std::cout << "Frames: " << data.frames << std::endl;
     std::cout << "Seconds: " << seconds << std::endl;
     std::cout << "Jack: " << jack << std::endl;
     std::cout << "Load: " << load * 100.0 << " %" << std::endl;
+    std::cout << "Max load: " << maxLoad * 100.0 << " %" << std::endl;
   }
 
 }
