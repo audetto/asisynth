@@ -318,6 +318,7 @@ namespace ASI
     case TRIANGLE: return triangle(x);
     case SQUARE: return square(x);
     case NOISE: return noise();
+    default: return 0;
     }
   }
 
