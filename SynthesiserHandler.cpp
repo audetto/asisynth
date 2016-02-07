@@ -65,7 +65,7 @@ namespace ASI
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
   {
-    if (eventIndex < eventCount && event.time == localTime)
+    while (eventIndex < eventCount && event.time == localTime)
     {
       const jack_midi_data_t cmd = event.buffer[0] & 0xf0;
       const jack_midi_data_t n = event.buffer[1];
@@ -256,7 +256,7 @@ namespace ASI
   {
     for (Note & note : m_notes)
     {
-      if (note.n == n)
+      if (note.n == n && note.status < DECAY)
       {
 	note.status = DECAY;
       }
@@ -267,7 +267,10 @@ namespace ASI
   {
     for (Note & note : m_notes)
     {
-      note.status = DECAY;
+      if (note.status < DECAY)
+      {
+	note.status = DECAY;
+      }
     }
   }
 
