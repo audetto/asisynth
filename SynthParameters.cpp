@@ -38,14 +38,22 @@ namespace ASI
 
     std::shared_ptr<Parameters> parameters(new Parameters);
 
-    parameters->attackTime = inParams["adsr"]["attack"];
-    parameters->sustainTime = inParams["adsr"]["sustain"];
-    parameters->decayTime = inParams["adsr"]["decay"];
+    parameters->adsr.attackTime = inParams["adsr"]["attack"];
+    parameters->adsr.sustainTime = inParams["adsr"]["sustain"];
+    parameters->adsr.decayTime = inParams["adsr"]["decay"];
 
-    parameters->averageSize = inParams["adsr"]["lowpass"];
+    parameters->adsr.averageSize = inParams["adsr"]["lowpass"];
+
+    parameters->vibrato.frequency = inParams["lfo"]["vibrato"]["freq"];
+    parameters->vibrato.amplitude = inParams["lfo"]["vibrato"]["amplitude"];
+
+    parameters->tremolo.frequency = inParams["lfo"]["tremolo"]["freq"];
+    parameters->tremolo.amplitude = inParams["lfo"]["tremolo"]["amplitude"];
 
     parameters->poliphony = inParams["poliphony"];
     parameters->volume = inParams["volume"];
+
+    parameters->sampleDepth = inParams["depth"];
 
     const json & hs = inParams["harmonics"];
 

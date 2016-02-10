@@ -61,6 +61,8 @@ namespace ASI
     {
       note.status = EMPTY;
     }
+
+    m_vibratoAmplitude = m_parameters->vibrato.amplitude / 12.0 * log(2.0);
   }
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
@@ -111,6 +113,14 @@ namespace ASI
 
   double SynthesiserHandler::processNotes(const jack_nframes_t absTime)
   {
+    const double phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_timeMultiplier;
+    const double valueOfLFOVibrato = wave(phaseOfLFOVibrato, SINE);
+    const double coeffOfLFOVibrato = exp(m_vibratoAmplitude * valueOfLFOVibrato);
+
+    const double phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_timeMultiplier;
+    const double valueOfLFOTremolo = wave(phaseOfLFOTremolo, SINE);
+    const double coeffOfLFOTremolo = 1.0 + m_parameters->tremolo.amplitude * valueOfLFOTremolo;
+
     double total = 0.0;
     for (Note & note : m_notes)
     {
@@ -162,20 +172,21 @@ namespace ASI
 
       // this is a low pass filter to smooth the ADSR
       // is it needed?
-      note.amplitude = (note.amplitude * m_parameters->averageSize + note.current) / (m_parameters->averageSize + 1.0);
+      note.amplitude = (note.amplitude * m_parameters->adsr.averageSize + note.current) / (m_parameters->adsr.averageSize + 1.0);
 
-      const jack_nframes_t tInFrames = absTime - note.t0;
-      const double t = tInFrames * m_timeMultiplier;
-      const double x = note.frequency * t;
+      const double deltaPhase = note.frequency * m_timeMultiplier * coeffOfLFOVibrato;
+
+      const double x = note.phase + deltaPhase;
 
       const double fx = x - size_t(x);
       const size_t pos = size_t(fx * m_interpolationMultiplier);
       const double w = m_samples[pos] * note.amplitude * note.volume;
+      note.phase = x;
       total += w;
 
     }
 
-    return total;
+    return total * coeffOfLFOTremolo;
   }
 
   void SynthesiserHandler::process(const jack_nframes_t nframes)
@@ -214,12 +225,12 @@ namespace ASI
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
   {
-    m_attackDelta = 1.0 / m_parameters->attackTime / nframes;
-    m_decayDelta = 1.0 / m_parameters->decayTime / nframes;
-    m_sustainDelta = 1.0 / m_parameters->sustainTime / nframes;
+    m_attackDelta = 1.0 / m_parameters->adsr.attackTime / nframes;
+    m_decayDelta = 1.0 / m_parameters->adsr.decayTime / nframes;
+    m_sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
     m_timeMultiplier = 1.0 / nframes;
 
-    generateSample(nframes);
+    generateSample(m_parameters->sampleDepth);
   }
 
   void SynthesiserHandler::shutdown()
@@ -240,6 +251,7 @@ namespace ASI
 	note.frequency = base;
 
 	note.t0 = time;
+	note.phase = 0.0;
 	note.volume = volume;
 
 	note.status = ATTACK;
@@ -274,11 +286,12 @@ namespace ASI
     }
   }
 
-  void SynthesiserHandler::generateSample(const size_t n)
+  void SynthesiserHandler::generateSample(const size_t depth)
   {
-    m_samples.resize(n + 1);
+    const size_t size = 1 << depth;
+    m_samples.resize(size + 1);
 
-    m_interpolationMultiplier = n;
+    m_interpolationMultiplier = size;
 
     double sumOfAmplitudes = 0.0;
     for (const Harmonic & h : m_parameters->harmonics)
@@ -286,9 +299,9 @@ namespace ASI
       sumOfAmplitudes += h.amplitude;
     }
 
-    const double coeff = 1.0 / n;
+    const double coeff = 1.0 / size;
 
-    for (size_t i = 0; i < n; ++i)
+    for (size_t i = 0; i < size; ++i)
     {
       const double t = i * coeff;
 

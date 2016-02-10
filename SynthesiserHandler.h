@@ -42,6 +42,7 @@ namespace ASI
       jack_midi_data_t n;     // MIDI number
       double frequency;       // base frequency
       jack_nframes_t t0;      // start time
+      double phase;           // current phase
       double volume;          // note volume
 
       Status status;
@@ -66,6 +67,7 @@ namespace ASI
     double m_decayDelta;
     double m_timeMultiplier;
     double m_interpolationMultiplier;
+    double m_vibratoAmplitude;
 
     void noteOn(const jack_midi_data_t n, const jack_nframes_t time);
     void noteOff(const jack_midi_data_t n);

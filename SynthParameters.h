@@ -23,15 +23,30 @@ namespace ASI
     Wave type;
   };
 
+  struct ADSR
+  {
+    double attackTime;
+    double sustainTime;
+    double decayTime;
+    double averageSize;     // low pass filter for ADSR
+  };
+
+  struct LFO
+  {
+    double frequency;
+    double amplitude;
+  };
+
   struct Parameters
   {
     size_t poliphony;
     double volume;          // note volume
-    double attackTime;
-    double sustainTime;
-    double decayTime;
 
-    double averageSize;     // low pass filter for ADSR
+    ADSR adsr;
+    LFO vibrato;
+    LFO tremolo;
+
+    size_t sampleDepth;
 
     std::vector<Harmonic> harmonics;
   };

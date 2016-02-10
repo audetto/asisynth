@@ -8,6 +8,7 @@
     },
     "volume": 0.2,
     "poliphony": 32,
+    "depth": 16,
     "harmonics": [
 	[1, 1.0, 0.0, "triangle"],
 	[1, 1.0, 0.0, "sine"],
@@ -16,5 +17,18 @@
 	[3, 0.4, 0.0, "triangle"],
 	[4, 0.3, 0.0, "triangle"],
 	[5, 0.2, 0.0, "triangle"]
-    ]
+    ],
+    "lfo":
+    {
+	"vibrato":
+	{
+	    "freq": 5,
+	    "amplitude": 0.05
+	},
+	"tremolo":
+	{
+	    "freq": 5,
+	    "amplitude": 0.01
+	}
+    }
 }
