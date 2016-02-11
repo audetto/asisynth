@@ -34,6 +34,7 @@
 	    "amplitude": 0.01,
 	    "harmonics": [
 		[1, 1.0, 0.0, "sine"]
-	    ]	}
+	    ]
+	}
     }
 }
