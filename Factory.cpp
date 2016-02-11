@@ -112,9 +112,14 @@ namespace ASI
 	handlers.push_back(std::make_shared<ASI::SynthesiserHandler>(client, parametersFile));
       }
     }
-    catch (po::error& e)
+    catch (const po::error& e)
     {
       std::cerr << "ERROR: " << e.what() << std::endl << desc << std::endl;
+      return false;
+    }
+    catch (const std::exception & e)
+    {
+      std::cerr << "ERROR: " << e.what() << std::endl;
       return false;
     }
 
