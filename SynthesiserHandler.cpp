@@ -34,6 +34,59 @@ namespace
     return distribution(generator);
   }
 
+  double wave(double x, ASI::Wave type)
+  {
+    switch (type)
+    {
+    case ASI::SINE: return std::sin(2.0 * M_PI * x);
+    case ASI::SAWTOOTH: return sawtooth(x);
+    case ASI::TRIANGLE: return triangle(x);
+    case ASI::SQUARE: return square(x);
+    case ASI::NOISE: return noise();
+    default: return 0;
+    }
+  }
+
+  void generateSample(const size_t size, const std::vector<ASI::Harmonic> & harmonics, std::vector<double> & samples)
+  {
+    samples.resize(size + 1);
+
+    double sumOfAmplitudes = 0.0;
+    for (const ASI::Harmonic & h : harmonics)
+    {
+      sumOfAmplitudes += h.amplitude;
+    }
+
+    const double coeff = 1.0 / size;
+
+    for (size_t i = 0; i < size; ++i)
+    {
+      const double t = i * coeff;
+
+      double total = 0.0;
+      for (const ASI::Harmonic & h : harmonics)
+      {
+	const double frequency = 1.0 * h.mult;
+	const double x = t * frequency + h.phase;
+	const double amplitude = h.amplitude / sumOfAmplitudes;
+	const double w = wave(x, h.type) * amplitude;
+	total += w;
+      }
+      samples[i] = total;
+    }
+
+    // just in case the interpolation ends up in the last point
+    samples.back() = samples.front();
+  }
+
+  double interpolateSample(const size_t size, const std::vector<double> & samples, const double x)
+  {
+    const double fx = x - size_t(x);
+    const size_t pos = size_t(fx * size);
+    const double w = samples[pos];
+    return w;
+  }
+
 }
 
 namespace ASI
@@ -45,16 +98,14 @@ namespace ASI
     m_inputPort = jack_port_register(m_client, "synth_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register(m_client, "synth_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
-    m_work.time = 0;
+    m_parameters = loadSynthParameters(m_parametersFile);
 
-    loadParameters();
+    initialise();
   }
 
-  void SynthesiserHandler::loadParameters()
+  void SynthesiserHandler::initialise()
   {
-    const std::shared_ptr<const Parameters> parameters = loadSynthParameters(m_parametersFile);
-
-    m_parameters = parameters;
+    m_work.time = 0;
 
     m_work.notes.resize(m_parameters->poliphony);
     for (Note & note : m_work.notes)
@@ -62,7 +113,25 @@ namespace ASI
       note.status = EMPTY;
     }
 
-    m_work.vibratoAmplitude = m_parameters->vibrato.amplitude / 12.0 * log(2.0);
+    m_work.interpolationMultiplier = 1 << m_parameters->sampleDepth;
+
+    generateSample(m_work.interpolationMultiplier, m_parameters->harmonics, m_work.samples);
+    generateSample(m_work.interpolationMultiplier, m_parameters->vibrato.harmonics, m_work.vibratoSamples);
+    generateSample(m_work.interpolationMultiplier, m_parameters->tremolo.harmonics, m_work.tremoloSamples);
+
+    // adjust vibrato sample to include amplitude multiplier
+    // the amplitude in the configuration file is in Number of Semitones
+    const double vibratoAmplitude = m_parameters->vibrato.amplitude * log(2.0) / 12.0;
+    for (double & value : m_work.vibratoSamples)
+    {
+      value = exp(value * vibratoAmplitude);
+    }
+
+    // adjust tremolo sample to include amplitude multiplier and offset to 1
+    for (double & value : m_work.tremoloSamples)
+    {
+      value = 1.0 + value * m_parameters->tremolo.amplitude;
+    }
   }
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
@@ -114,12 +183,10 @@ namespace ASI
   double SynthesiserHandler::processNotes(const jack_nframes_t absTime)
   {
     const double phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
-    const double valueOfLFOVibrato = wave(phaseOfLFOVibrato, SINE);
-    const double coeffOfLFOVibrato = exp(m_work.vibratoAmplitude * valueOfLFOVibrato);
+    const double coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
 
     const double phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
-    const double valueOfLFOTremolo = wave(phaseOfLFOTremolo, SINE);
-    const double coeffOfLFOTremolo = 1.0 + m_parameters->tremolo.amplitude * valueOfLFOTremolo;
+    const double coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
 
     double total = 0.0;
     for (Note & note : m_work.notes)
@@ -177,12 +244,10 @@ namespace ASI
       const double deltaPhase = note.frequency * m_work.timeMultiplier * coeffOfLFOVibrato;
 
       const double x = note.phase + deltaPhase;
-
-      const double fx = x - size_t(x);
-      const size_t pos = size_t(fx * m_work.interpolationMultiplier);
-      const double w = m_work.samples[pos] * note.amplitude * note.volume;
+      const double w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, x);
+      const double value = w * note.amplitude * note.volume;
       note.phase = x;
-      total += w;
+      total += value;
 
     }
 
@@ -229,8 +294,6 @@ namespace ASI
     m_work.decayDelta = 1.0 / m_parameters->adsr.decayTime / nframes;
     m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
     m_work.timeMultiplier = 1.0 / nframes;
-
-    generateSample(m_parameters->sampleDepth);
   }
 
   void SynthesiserHandler::shutdown()
@@ -283,55 +346,6 @@ namespace ASI
       {
 	note.status = DECAY;
       }
-    }
-  }
-
-  void SynthesiserHandler::generateSample(const size_t depth)
-  {
-    const size_t size = 1 << depth;
-    m_work.samples.resize(size + 1);
-
-    m_work.interpolationMultiplier = size;
-
-    double sumOfAmplitudes = 0.0;
-    for (const Harmonic & h : m_parameters->harmonics)
-    {
-      sumOfAmplitudes += h.amplitude;
-    }
-
-    const double coeff = 1.0 / size;
-
-    for (size_t i = 0; i < size; ++i)
-    {
-      const double t = i * coeff;
-
-      double total = 0.0;
-      for (const Harmonic & h : m_parameters->harmonics)
-      {
-	const double frequency = 1.0 * h.mult;
-	const double x = t * frequency + h.phase;
-	const double amplitude = h.amplitude / sumOfAmplitudes;
-	const double w = wave(x, h.type) * amplitude;
-	total += w;
-      }
-      m_work.samples[i] = total;
-    }
-
-    // just in case the interpolation ends up in the last point
-    m_work.samples.back() = m_work.samples.front();
-  }
-
-
-  double SynthesiserHandler::wave(double x, Wave type)
-  {
-    switch (type)
-    {
-    case SINE: return std::sin(2.0 * M_PI * x);
-    case SAWTOOTH: return sawtooth(x);
-    case TRIANGLE: return triangle(x);
-    case SQUARE: return square(x);
-    case NOISE: return noise();
-    default: return 0;
     }
   }
 

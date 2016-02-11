@@ -59,12 +59,14 @@ namespace ASI
       // table with 1 period of the note
       std::vector<double> samples;
 
+      std::vector<double> vibratoSamples;
+      std::vector<double> tremoloSamples;
+
       double attackDelta;
       double sustainDelta;
       double decayDelta;
       double timeMultiplier;
       double interpolationMultiplier;
-      double vibratoAmplitude;
     };
 
     const std::string m_parametersFile;
@@ -80,11 +82,7 @@ namespace ASI
     void processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event);
     double processNotes(const jack_nframes_t absTime);
 
-    void loadParameters();
-
-    void generateSample(const size_t n);
-
-    static double wave(double x, Wave type);
+    void initialise();
   };
 
 }

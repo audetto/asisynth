@@ -35,6 +35,7 @@ namespace ASI
   {
     double frequency;
     double amplitude;
+    std::vector<Harmonic> harmonics;
   };
 
   struct Parameters

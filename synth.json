@@ -22,13 +22,18 @@
     {
 	"vibrato":
 	{
-	    "freq": 5,
-	    "amplitude": 0.05
+	    "freq": 6,
+	    "amplitude": 0.05,
+	    "harmonics": [
+		[1, 1.0, 0.0, "sine"]
+	    ]
 	},
 	"tremolo":
 	{
 	    "freq": 5,
-	    "amplitude": 0.01
-	}
+	    "amplitude": 0.01,
+	    "harmonics": [
+		[1, 1.0, 0.0, "sine"]
+	    ]	}
     }
 }

@@ -26,6 +26,22 @@ namespace
 
     throw std::runtime_error("Unknown wave type");
   }
+
+  void readHarmonics(const json & params, std::vector<ASI::Harmonic> & harmonics)
+  {
+    for (const json & h : params)
+    {
+      const size_t mult = h[0];
+      const double amplitude = h[1];
+      const double phase = h[2];
+      const std::string str = h[3];
+
+      const ASI::Wave w = strToWave(str);
+
+      harmonics.push_back({mult, amplitude, phase, w});
+    }
+  }
+
 }
 
 namespace ASI
@@ -44,30 +60,21 @@ namespace ASI
 
     parameters->adsr.averageSize = inParams["adsr"]["lowpass"];
 
-    parameters->vibrato.frequency = inParams["lfo"]["vibrato"]["freq"];
-    parameters->vibrato.amplitude = inParams["lfo"]["vibrato"]["amplitude"];
-
-    parameters->tremolo.frequency = inParams["lfo"]["tremolo"]["freq"];
-    parameters->tremolo.amplitude = inParams["lfo"]["tremolo"]["amplitude"];
-
     parameters->poliphony = inParams["poliphony"];
     parameters->volume = inParams["volume"];
 
     parameters->sampleDepth = inParams["depth"];
 
-    const json & hs = inParams["harmonics"];
+    readHarmonics(inParams["harmonics"], parameters->harmonics);
 
-    for (const json & h : hs)
-    {
-      const size_t mult = h[0];
-      const double amplitude = h[1];
-      const double phase = h[2];
-      const std::string str = h[3];
+    parameters->vibrato.frequency = inParams["lfo"]["vibrato"]["freq"];
+    parameters->vibrato.amplitude = inParams["lfo"]["vibrato"]["amplitude"];
+    readHarmonics(inParams["lfo"]["vibrato"]["harmonics"], parameters->vibrato.harmonics);
 
-      const Wave w = strToWave(str);
+    parameters->tremolo.frequency = inParams["lfo"]["tremolo"]["freq"];
+    parameters->tremolo.amplitude = inParams["lfo"]["tremolo"]["amplitude"];
+    readHarmonics(inParams["lfo"]["tremolo"]["harmonics"], parameters->tremolo.harmonics);
 
-      parameters->harmonics.push_back({mult, amplitude, phase, w});
-    }
 
     return parameters;
   }
