@@ -45,7 +45,7 @@ namespace ASI
     m_inputPort = jack_port_register(m_client, "synth_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register(m_client, "synth_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
 
-    m_time = 0;
+    m_work.time = 0;
 
     loadParameters();
   }
@@ -56,13 +56,13 @@ namespace ASI
 
     m_parameters = parameters;
 
-    m_notes.resize(m_parameters->poliphony);
-    for (Note & note : m_notes)
+    m_work.notes.resize(m_parameters->poliphony);
+    for (Note & note : m_work.notes)
     {
       note.status = EMPTY;
     }
 
-    m_vibratoAmplitude = m_parameters->vibrato.amplitude / 12.0 * log(2.0);
+    m_work.vibratoAmplitude = m_parameters->vibrato.amplitude / 12.0 * log(2.0);
   }
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
@@ -113,22 +113,22 @@ namespace ASI
 
   double SynthesiserHandler::processNotes(const jack_nframes_t absTime)
   {
-    const double phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_timeMultiplier;
+    const double phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
     const double valueOfLFOVibrato = wave(phaseOfLFOVibrato, SINE);
-    const double coeffOfLFOVibrato = exp(m_vibratoAmplitude * valueOfLFOVibrato);
+    const double coeffOfLFOVibrato = exp(m_work.vibratoAmplitude * valueOfLFOVibrato);
 
-    const double phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_timeMultiplier;
+    const double phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
     const double valueOfLFOTremolo = wave(phaseOfLFOTremolo, SINE);
     const double coeffOfLFOTremolo = 1.0 + m_parameters->tremolo.amplitude * valueOfLFOTremolo;
 
     double total = 0.0;
-    for (Note & note : m_notes)
+    for (Note & note : m_work.notes)
     {
       switch (note.status)
       {
       case ATTACK:
 	{
-	  note.current += m_attackDelta;
+	  note.current += m_work.attackDelta;
 	  if (note.current >= 1.0)
 	  {
 	    note.current = 1.0;
@@ -138,7 +138,7 @@ namespace ASI
 	}
       case SUSTAIN:
 	{
-	  note.current -= m_sustainDelta;
+	  note.current -= m_work.sustainDelta;
 	  if (note.current <= 0.0)
 	  {
 	    note.current = 0.0;
@@ -148,7 +148,7 @@ namespace ASI
 	}
       case DECAY:
 	{
-	  note.current -= m_decayDelta;
+	  note.current -= m_work.decayDelta;
 	  if (note.current <= 0.0)
 	  {
 	    note.current = 0.0;
@@ -174,13 +174,13 @@ namespace ASI
       // is it needed?
       note.amplitude = (note.amplitude * m_parameters->adsr.averageSize + note.current) / (m_parameters->adsr.averageSize + 1.0);
 
-      const double deltaPhase = note.frequency * m_timeMultiplier * coeffOfLFOVibrato;
+      const double deltaPhase = note.frequency * m_work.timeMultiplier * coeffOfLFOVibrato;
 
       const double x = note.phase + deltaPhase;
 
       const double fx = x - size_t(x);
-      const size_t pos = size_t(fx * m_interpolationMultiplier);
-      const double w = m_samples[pos] * note.amplitude * note.volume;
+      const size_t pos = size_t(fx * m_work.interpolationMultiplier);
+      const double w = m_work.samples[pos] * note.amplitude * note.volume;
       note.phase = x;
       total += w;
 
@@ -200,7 +200,7 @@ namespace ASI
 
     // should we ask JACK for current time instead?
     // calling jack_last_frame_time(m_client);
-    jack_nframes_t framesAtStart = m_time;
+    jack_nframes_t framesAtStart = m_work.time;
 
     jack_nframes_t eventIndex = 0;
 
@@ -220,15 +220,15 @@ namespace ASI
       outPortBuf[i] = w;
     }
 
-    m_time += nframes;
+    m_work.time += nframes;
   }
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
   {
-    m_attackDelta = 1.0 / m_parameters->adsr.attackTime / nframes;
-    m_decayDelta = 1.0 / m_parameters->adsr.decayTime / nframes;
-    m_sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
-    m_timeMultiplier = 1.0 / nframes;
+    m_work.attackDelta = 1.0 / m_parameters->adsr.attackTime / nframes;
+    m_work.decayDelta = 1.0 / m_parameters->adsr.decayTime / nframes;
+    m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
+    m_work.timeMultiplier = 1.0 / nframes;
 
     generateSample(m_parameters->sampleDepth);
   }
@@ -243,7 +243,7 @@ namespace ASI
 
     const double volume = m_parameters->volume; // * velocity
 
-    for (Note & note : m_notes)
+    for (Note & note : m_work.notes)
     {
       if (note.status == EMPTY)
       {
@@ -266,7 +266,7 @@ namespace ASI
 
   void SynthesiserHandler::noteOff(const jack_midi_data_t n)
   {
-    for (Note & note : m_notes)
+    for (Note & note : m_work.notes)
     {
       if (note.n == n && note.status < DECAY)
       {
@@ -277,7 +277,7 @@ namespace ASI
 
   void SynthesiserHandler::allNotesOff()
   {
-    for (Note & note : m_notes)
+    for (Note & note : m_work.notes)
     {
       if (note.status < DECAY)
       {
@@ -289,9 +289,9 @@ namespace ASI
   void SynthesiserHandler::generateSample(const size_t depth)
   {
     const size_t size = 1 << depth;
-    m_samples.resize(size + 1);
+    m_work.samples.resize(size + 1);
 
-    m_interpolationMultiplier = size;
+    m_work.interpolationMultiplier = size;
 
     double sumOfAmplitudes = 0.0;
     for (const Harmonic & h : m_parameters->harmonics)
@@ -314,11 +314,11 @@ namespace ASI
 	const double w = wave(x, h.type) * amplitude;
 	total += w;
       }
-      m_samples[i] = total;
+      m_work.samples[i] = total;
     }
 
     // just in case the interpolation ends up in the last point
-    m_samples.back() = m_samples.front();
+    m_work.samples.back() = m_work.samples.front();
   }
 
 

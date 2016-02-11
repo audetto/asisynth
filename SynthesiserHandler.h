@@ -50,24 +50,28 @@ namespace ASI
       double amplitude;       // smooth ADSR
     };
 
+    struct Workspace
+    {
+      jack_nframes_t time;
+
+      std::vector<Note> notes;
+
+      // table with 1 period of the note
+      std::vector<double> samples;
+
+      double attackDelta;
+      double sustainDelta;
+      double decayDelta;
+      double timeMultiplier;
+      double interpolationMultiplier;
+      double vibratoAmplitude;
+    };
+
     const std::string m_parametersFile;
 
-    jack_nframes_t m_time;
+    Workspace m_work;
 
     std::shared_ptr<const Parameters> m_parameters;
-
-    // state / workspace
-    std::vector<Note> m_notes;
-
-    // table with 1 period of the note
-    std::vector<double> m_samples;
-
-    double m_attackDelta;
-    double m_sustainDelta;
-    double m_decayDelta;
-    double m_timeMultiplier;
-    double m_interpolationMultiplier;
-    double m_vibratoAmplitude;
 
     void noteOn(const jack_midi_data_t n, const jack_nframes_t time);
     void noteOff(const jack_midi_data_t n);
