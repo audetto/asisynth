@@ -16,71 +16,89 @@ namespace ASI
   {
   public:
     Filter()
-      : m_b({1.0}), m_a({1.0})
     {
       // this is the next position to write to
-      m_posX = 0;
-      m_posY = 0;
+      m_pos = 0;
 
-      std::fill(m_x.begin(), m_x.end(), 0.0);
-      std::fill(m_y.begin(), m_y.end(), 0.0);
+      m_x.fill(0.0);
+      m_y.fill(0.0);
+      m_b.fill(0.0);
+      m_a.fill(0.0);
+
+      m_b[0] = 1.0;
+      m_a[0] = 1.0;
+      m_sizeOfB = 1;
+      m_sizeOfA = 1;
     }
 
     virtual void init(std::vector<double> b, std::vector<double> a) override
     {
-      m_b = b;
-      m_a = a;
+      if (b.size() > m_b.size())
+      {
+	throw std::invalid_argument("IIR a is too large");
+      }
+
+      if (a.size() > m_a.size())
+      {
+	throw std::invalid_argument("IIR a is too large");
+      }
+
+      std::copy(b.begin(), b.end(), m_b.begin());
+      std::copy(a.begin(), a.end(), m_a.begin());
+
+      m_sizeOfB = b.size();
+      m_sizeOfA = a.size();
+
+      // normalise so we do not need to worry about m_a[0] later
+      for (size_t i = 1; i < m_sizeOfA; ++i)
+      {
+	m_a[i] /= m_a[0];
+      }
     }
 
     double process(const double x)
     {
-      const ssize_t sizeOfB = m_b.size();
-      const ssize_t sizeOfA = m_a.size();
-
       // add it
-      m_x[m_posX & ((1 << N) - 1)] = x;
+      m_x[m_pos & ((1 << N) - 1)] = x;
       // now (till end of function m_posX is the last position written to)
 
       double y = 0;
 
-      for (ssize_t i = 0; i < sizeOfB; ++i)
+      for (ssize_t i = 0; i < m_sizeOfB; ++i)
       {
 	// on the first iteration we read from m_posX
 	// which has just been written to
-	const ssize_t k = (m_posX - i) & ((1 << N) - 1);
+	const ssize_t k = (m_pos - i) & ((1 << N) - 1);
 	y += m_x[k] * m_b[i];
       }
 
-      for (ssize_t i = 1; i < sizeOfA; ++i)
+      for (ssize_t i = 1; i < m_sizeOfA; ++i)
       {
 	// on the first iteration we read from m_posY - 1
 	// which was written to on the previous call to ::process()
-	const ssize_t k = (m_posY - i) & ((1 << N) - 1);
+	const ssize_t k = (m_pos - i) & ((1 << N) - 1);
 	y -= m_y[k] * m_a[i];
       }
 
-      y /= m_a[0];
-
       // write to
-      m_y[m_posY & ((1 << N) - 1)] = y;
+      m_y[m_pos & ((1 << N) - 1)] = y;
 
       // advance pointers
-      ++m_posY;
-      ++m_posX;
+      ++m_pos;
 
       return y;
     }
 
   private:
 
-    ssize_t m_posX;
+    ssize_t m_pos;
     std::array<double, 1 << N> m_x;
-
-    ssize_t m_posY;
     std::array<double, 1 << N> m_y;
 
-    std::vector<double> m_b;
-    std::vector<double> m_a;
+    size_t m_sizeOfB;
+    size_t m_sizeOfA;
+    std::array<double, 1 << N> m_b;
+    std::array<double, 1 << N> m_a;
   };
 
 }
