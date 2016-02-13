@@ -75,6 +75,10 @@ namespace ASI
     parameters->tremolo.amplitude = inParams["lfo"]["tremolo"]["amplitude"];
     readHarmonics(inParams["lfo"]["tremolo"]["harmonics"], parameters->tremolo.harmonics);
 
+    parameters->iir.pass = BANDPASS;
+    parameters->iir.order = inParams["filter"]["order"];
+    parameters->iir.lower = inParams["filter"]["lower"];
+    parameters->iir.upper = inParams["filter"]["upper"];
 
     return parameters;
   }

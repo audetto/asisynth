@@ -15,6 +15,15 @@ namespace ASI
     NOISE
   };
 
+  enum Pass
+  {
+    NONE,
+    LOWPASS,
+    HIGHPASS,
+    BANDPASS,
+    BANDSTOP
+  };
+
   struct Harmonic
   {
     size_t mult;
@@ -38,6 +47,14 @@ namespace ASI
     std::vector<Harmonic> harmonics;
   };
 
+  struct IIR
+  {
+    Pass pass;
+    size_t order;
+    double lower;
+    double upper;
+  };
+
   struct Parameters
   {
     size_t poliphony;
@@ -46,6 +63,8 @@ namespace ASI
     ADSR adsr;
     LFO vibrato;
     LFO tremolo;
+
+    IIR iir;
 
     size_t sampleDepth;
 

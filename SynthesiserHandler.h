@@ -49,6 +49,8 @@ namespace ASI
       Status status;
       double current;         // linear ADSR
       double amplitude;       // smooth ADSR
+
+      Filter<4> filter;
     };
 
     struct Workspace
@@ -63,13 +65,15 @@ namespace ASI
       std::vector<double> vibratoSamples;
       std::vector<double> tremoloSamples;
 
+      jack_nframes_t sampleRate;
+
       double attackDelta;
       double sustainDelta;
       double decayDelta;
       double timeMultiplier;
       double interpolationMultiplier;
 
-      Filter<10> filter;
+      Filter<4> filter;
     };
 
     const std::string m_parametersFile;

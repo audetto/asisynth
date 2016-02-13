@@ -246,8 +246,11 @@ namespace ASI
 
       const double x = note.phase + deltaPhase;
       const double w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, x);
-      const double value = w * note.amplitude * note.volume;
+      double value = w * note.amplitude * note.volume;
       note.phase = x;
+
+      value = note.filter.process(value);
+
       total += value;
     }
 
@@ -297,6 +300,7 @@ namespace ASI
     m_work.decayDelta = 1.0 / m_parameters->adsr.decayTime / nframes;
     m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
     m_work.timeMultiplier = 1.0 / nframes;
+    m_work.sampleRate = nframes;
   }
 
   void SynthesiserHandler::shutdown()
@@ -323,6 +327,11 @@ namespace ASI
 	note.status = ATTACK;
 	note.current = 0.0;
 	note.amplitude = 0.0;
+
+	const double lower = base / m_parameters->iir.lower;
+	const double upper = base * m_parameters->iir.upper;
+	createButterBandPassFilter(m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
+
 	return;
       }
     }
