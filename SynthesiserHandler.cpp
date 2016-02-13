@@ -1,5 +1,6 @@
 #include "SynthesiserHandler.h"
 #include "MidiCommands.h"
+#include "IIRFactory.h"
 
 #include <cmath>
 #include <iomanip>
@@ -248,10 +249,12 @@ namespace ASI
       const double value = w * note.amplitude * note.volume;
       note.phase = x;
       total += value;
-
     }
 
-    return total * coeffOfLFOTremolo;
+    const double signal = total * coeffOfLFOTremolo;
+    const double filtered = m_work.filter.process(signal);
+
+    return filtered;
   }
 
   void SynthesiserHandler::process(const jack_nframes_t nframes)

@@ -3,6 +3,7 @@
 #include "InputOutputHandler.h"
 #include "MidiEvent.h"
 #include "SynthParameters.h"
+#include "Filter.h"
 
 #include <jack/midiport.h>
 #include <list>
@@ -67,6 +68,8 @@ namespace ASI
       double decayDelta;
       double timeMultiplier;
       double interpolationMultiplier;
+
+      Filter<10> filter;
     };
 
     const std::string m_parametersFile;

@@ -9,6 +9,7 @@ add_executable(asisynth
   EchoHandler.cpp
   Factory.cpp
   I_JackHandler.cpp
+  IIRFactory.cpp
   InputOutputHandler
   MidiEvent.cpp
   MidiPassThrough.cpp
@@ -19,8 +20,12 @@ add_executable(asisynth
   SynthParameters.cpp
   )
 
+add_library(sigproc
+  sigproc/liir.c)
+
 target_link_libraries(asisynth jack)
 target_link_libraries(asisynth boost_program_options)
+target_link_libraries(asisynth sigproc)
 
 set_property(TARGET asisynth PROPERTY CXX_STANDARD 11)
 
