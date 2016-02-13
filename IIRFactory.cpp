@@ -10,7 +10,7 @@ extern "C"
 
 namespace ASI
 {
-  void createButterBandPassFilter(const int order, const size_t sr, const double lower, const double upper, InitFilter & filter)
+  void createButterBandPassFilter(const size_t order, const size_t sr, const double lower, const double upper, InitFilter & filter)
   {
     const double wl = 2.0 * lower / sr;
     const double wh = 2.0 * upper / sr;
