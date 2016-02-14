@@ -61,6 +61,7 @@ namespace ASI
   {
     size_t poliphony;
     double volume;          // note volume
+    double velocityPower;   // velocity ^ power * volume
 
     ADSR adsr;
     LFO vibrato;

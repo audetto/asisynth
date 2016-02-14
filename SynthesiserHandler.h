@@ -87,7 +87,7 @@ namespace ASI
 
     std::shared_ptr<const Parameters> m_parameters;
 
-    void noteOn(const jack_midi_data_t n, const jack_nframes_t time);
+    void noteOn(const jack_nframes_t time, const jack_midi_data_t n, const jack_midi_data_t velocity);
     void noteOff(const jack_midi_data_t n);
     void allNotesOff();
 

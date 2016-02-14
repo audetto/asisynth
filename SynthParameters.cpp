@@ -64,6 +64,7 @@ namespace ASI
 
     parameters->poliphony = inParams["poliphony"];
     parameters->volume = inParams["volume"];
+    parameters->velocityPower = inParams["velocity"];
 
     parameters->sampleDepth = inParams["depth"];
 

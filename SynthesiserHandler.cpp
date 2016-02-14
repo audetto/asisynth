@@ -154,7 +154,7 @@ namespace ASI
 	  }
 	  else
 	  {
-	    noteOn(n1, absTime);
+	    noteOn(absTime, n1, n2);
 	  }
 	  break;
 	}
@@ -347,11 +347,12 @@ namespace ASI
   {
   }
 
-  void SynthesiserHandler::noteOn(const jack_midi_data_t n, const jack_nframes_t time)
+  void SynthesiserHandler::noteOn(const jack_nframes_t time, const jack_midi_data_t n, const jack_midi_data_t velocity)
   {
     const double base = std::pow(2.0, (n - 69) / 12.0) * 440.0;
 
-    const double volume = m_parameters->volume; // * velocity
+    const double coeff = pow(velocity / 127.0, m_parameters->velocityPower);
+    const double volume = m_parameters->volume * coeff;
 
     for (Note & note : m_work.notes)
     {
