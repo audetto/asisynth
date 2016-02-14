@@ -11,7 +11,7 @@ namespace ASI
     if (cmd == MIDI_CC)
     {
       const jack_midi_data_t control = event.buffer[1];
-      if (control == 66)
+      if (control == MIDI_CC_SOSTENUTO)
       {
 	const jack_midi_data_t value = event.buffer[2];
 

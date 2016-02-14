@@ -35,6 +35,7 @@ namespace ASI
       DECAY,                   // peak -> 1
       SUSTAIN,                 // slow decay
       RELEASE,                 // . -> 0
+      FORCE_RELEASE,           // this one ignores the pedal
       OFF,                     // linear ADSR = 0, smooth going to 0
       EMPTY                    // slot not used
     };
@@ -67,6 +68,8 @@ namespace ASI
       std::vector<double> tremoloSamples;
 
       jack_nframes_t sampleRate;
+
+      bool sustain;  // the pedal
 
       double attackDelta;
       double decayDelta;

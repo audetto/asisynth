@@ -107,6 +107,7 @@ namespace ASI
   void SynthesiserHandler::initialise()
   {
     m_work.time = 0;
+    m_work.sustain = false;
 
     m_work.notes.resize(m_parameters->poliphony);
     for (Note & note : m_work.notes)
@@ -140,33 +141,43 @@ namespace ASI
     while (eventIndex < eventCount && event.time == localTime)
     {
       const jack_midi_data_t cmd = event.buffer[0] & 0xf0;
-      const jack_midi_data_t n = event.buffer[1];
-      const jack_midi_data_t velocity = event.buffer[2];
+      const jack_midi_data_t n1 = event.buffer[1];
+      const jack_midi_data_t n2 = event.buffer[2];
 
       switch (cmd)
       {
       case MIDI_NOTEON:
 	{
-	  if (velocity == 0)
+	  if (n2 == 0)
 	  {
-	    noteOff(n);
+	    noteOff(n1);
 	  }
 	  else
 	  {
-	    noteOn(n, absTime);
+	    noteOn(n1, absTime);
 	  }
 	  break;
 	}
       case MIDI_NOTEOFF:
 	{
-	  noteOff(n);
+	  noteOff(n1);
 	  break;
 	}
       case MIDI_CC:
 	{
-	  if (n == 123)
+	  switch (n1)
 	  {
-	    allNotesOff();
+	  case MIDI_CC_ALL_SOUND_OFF:
+	  case MIDI_CC_ALL_NOTES_OFF:
+	    {
+	      allNotesOff();
+	      break;
+	    }
+	  case MIDI_CC_SUSTAIN:
+	    {
+	      m_work.sustain = n2 >= 64;
+	      break;
+	    }
 	  }
 	  break;
 	}
@@ -188,6 +199,12 @@ namespace ASI
 
     const double phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
     const double coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
+
+    // if the sustain pedal is pressed
+    // RELEASE behaves the same as SUSTAIN
+    // we could work on the status
+    // but this uses less "if"
+    const double releaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
 
     double total = 0.0;
     for (Note & note : m_work.notes)
@@ -226,6 +243,18 @@ namespace ASI
 	}
       case RELEASE:
 	{
+	  // same as SUSTAIN if the pedal is down
+	  note.current -= releaseDelta;
+	  if (note.current <= 0.0)
+	  {
+	    note.current = 0.0;
+	    note.status = OFF;
+	  }
+	  break;
+	}
+      case FORCE_RELEASE:
+	{
+	  // same as RELEASE but the pedal is ignored
 	  note.current -= m_work.releaseDelta;
 	  if (note.current <= 0.0)
 	  {
@@ -365,9 +394,9 @@ namespace ASI
   {
     for (Note & note : m_work.notes)
     {
-      if (note.status < RELEASE)
+      if (note.status < FORCE_RELEASE)
       {
-	note.status = RELEASE;
+	note.status = FORCE_RELEASE;
       }
     }
   }
