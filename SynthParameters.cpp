@@ -54,9 +54,11 @@ namespace ASI
 
     std::shared_ptr<Parameters> parameters(new Parameters);
 
+    parameters->adsr.peak = inParams["adsr"]["peak"];
     parameters->adsr.attackTime = inParams["adsr"]["attack"];
-    parameters->adsr.sustainTime = inParams["adsr"]["sustain"];
     parameters->adsr.decayTime = inParams["adsr"]["decay"];
+    parameters->adsr.sustainTime = inParams["adsr"]["sustain"];
+    parameters->adsr.releaseTime = inParams["adsr"]["release"];
 
     parameters->adsr.averageSize = inParams["adsr"]["lowpass"];
 

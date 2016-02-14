@@ -197,7 +197,17 @@ namespace ASI
       case ATTACK:
 	{
 	  note.current += m_work.attackDelta;
-	  if (note.current >= 1.0)
+	  if (note.current >= m_parameters->adsr.peak)
+	  {
+	    note.current = m_parameters->adsr.peak;
+	    note.status = DECAY;
+	  }
+	  break;
+	}
+      case DECAY:
+	{
+	  note.current -= m_work.decayDelta;
+	  if (note.current <= 1.0)
 	  {
 	    note.current = 1.0;
 	    note.status = SUSTAIN;
@@ -214,9 +224,9 @@ namespace ASI
 	  }
 	  break;
 	}
-      case DECAY:
+      case RELEASE:
 	{
-	  note.current -= m_work.decayDelta;
+	  note.current -= m_work.releaseDelta;
 	  if (note.current <= 0.0)
 	  {
 	    note.current = 0.0;
@@ -296,9 +306,10 @@ namespace ASI
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
   {
-    m_work.attackDelta = 1.0 / m_parameters->adsr.attackTime / nframes;
-    m_work.decayDelta = 1.0 / m_parameters->adsr.decayTime / nframes;
+    m_work.attackDelta = m_parameters->adsr.peak / m_parameters->adsr.attackTime / nframes;
+    m_work.decayDelta = (m_parameters->adsr.peak - 1.0) / m_parameters->adsr.decayTime / nframes;
     m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
+    m_work.releaseDelta = 1.0 / m_parameters->adsr.releaseTime / nframes;
     m_work.timeMultiplier = 1.0 / nframes;
     m_work.sampleRate = nframes;
   }
@@ -343,9 +354,9 @@ namespace ASI
   {
     for (Note & note : m_work.notes)
     {
-      if (note.n == n && note.status < DECAY)
+      if (note.n == n && note.status < RELEASE)
       {
-	note.status = DECAY;
+	note.status = RELEASE;
       }
     }
   }
@@ -354,9 +365,9 @@ namespace ASI
   {
     for (Note & note : m_work.notes)
     {
-      if (note.status < DECAY)
+      if (note.status < RELEASE)
       {
-	note.status = DECAY;
+	note.status = RELEASE;
       }
     }
   }

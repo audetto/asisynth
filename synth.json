@@ -1,9 +1,11 @@
 {
     "adsr":
     {
+	"peak": 1.5,
 	"attack": 0.1,
-	"sustain": 2.0,
-	"decay": 0.2,
+	"decay": 0.05,
+	"sustain": 10.0,
+	"release": 0.1,
 	"lowpass": 10.0
     },
     "volume": 0.2,

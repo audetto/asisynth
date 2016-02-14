@@ -34,9 +34,11 @@ namespace ASI
 
   struct ADSR
   {
+    double peak;
     double attackTime;
-    double sustainTime;
     double decayTime;
+    double sustainTime;
+    double releaseTime;
     double averageSize;     // low pass filter for ADSR
   };
 

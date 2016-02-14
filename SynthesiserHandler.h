@@ -31,9 +31,10 @@ namespace ASI
 
     enum Status
     {
-      ATTACK,                  // 0 -> 1
+      ATTACK,                  // 0 -> peak
+      DECAY,                   // peak -> 1
       SUSTAIN,                 // slow decay
-      DECAY,                   // . -> 0
+      RELEASE,                 // . -> 0
       OFF,                     // linear ADSR = 0, smooth going to 0
       EMPTY                    // slot not used
     };
@@ -68,8 +69,9 @@ namespace ASI
       jack_nframes_t sampleRate;
 
       double attackDelta;
-      double sustainDelta;
       double decayDelta;
+      double sustainDelta;
+      double releaseDelta;
       double timeMultiplier;
       double interpolationMultiplier;
 
