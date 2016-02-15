@@ -354,27 +354,45 @@ namespace ASI
     const double coeff = pow(velocity / 127.0, m_parameters->velocityPower);
     const double volume = m_parameters->volume * coeff;
 
+    Note * newNote = nullptr;
+
     for (Note & note : m_work.notes)
     {
       if (note.status == EMPTY)
       {
-	note.n = n;
-	note.frequency = base;
-
-	note.t0 = time;
-	note.phase = 0.0;
-	note.volume = volume;
-
-	note.status = ATTACK;
-	note.current = 0.0;
-	note.amplitude = 0.0;
-
-	const double lower = base / m_parameters->iir.lower;
-	const double upper = base * m_parameters->iir.upper;
-	createButterBandPassFilter(m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
-
-	return;
+	newNote = &note;
       }
+      else
+      {
+	if (note.n == n)
+	{
+	  // reuse existing note
+	  // rather than playing 2 notes at the same frequency
+	  note.status = ATTACK;
+	  note.volume = volume;
+	  return;
+	}
+      }
+    }
+
+    if (newNote)
+    {
+      Note & note = *newNote;
+      note.n = n;
+      note.frequency = base;
+
+      note.t0 = time;
+      note.phase = 0.0;
+      note.volume = volume;
+
+      note.status = ATTACK;
+      note.current = 0.0;
+      note.amplitude = 0.0;
+
+      const double lower = base / m_parameters->iir.lower;
+      const double upper = base * m_parameters->iir.upper;
+      createButterBandPassFilter(m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
+      return;
     }
 
     std::cerr << "Max polyphony!" << std::endl;
