@@ -1,5 +1,7 @@
 #pragma once
 
+#include "SynthParameters.h"
+
 #include <vector>
 #include <array>
 
@@ -8,7 +10,7 @@ namespace ASI
   class InitFilter
   {
   public:
-    virtual void init(std::vector<double> b, std::vector<double> a) = 0;
+    virtual void init(std::vector<Real_t> b, std::vector<Real_t> a) = 0;
   };
 
   template <ssize_t N>
@@ -30,7 +32,7 @@ namespace ASI
       m_sizeOfAB = 1;
     }
 
-    virtual void init(std::vector<double> b, std::vector<double> a) override
+    virtual void init(std::vector<Real_t> b, std::vector<Real_t> a) override
     {
       if (b.size() > m_b.size())
       {
@@ -62,14 +64,14 @@ namespace ASI
       m_a[0] = 0.0;
     }
 
-    double process(const double x)
+    Real_t process(const Real_t x)
     {
       // add it
       m_x[m_pos & ((1 << N) - 1)] = x;
       // now (till end of function m_pos is the last position written to)
 
-      double sum_y = 0.0;
-      double sum_x = 0.0;
+      Real_t sum_y = 0.0;
+      Real_t sum_x = 0.0;
       for (size_t i = 0; i < m_sizeOfAB; ++i)
       {
 	// on the first iteration we read from m_pos
@@ -83,7 +85,7 @@ namespace ASI
 	sum_y += m_y[k] * m_a[i];
       }
 
-      const double y = sum_x - sum_y;
+      const Real_t y = sum_x - sum_y;
 
       // write to
       m_y[m_pos & ((1 << N) - 1)] = y;
@@ -97,12 +99,12 @@ namespace ASI
   private:
 
     ssize_t m_pos;
-    std::array<double, 1 << N> m_x;
-    std::array<double, 1 << N> m_y;
+    std::array<Real_t, 1 << N> m_x;
+    std::array<Real_t, 1 << N> m_y;
 
     size_t m_sizeOfAB;
-    std::array<double, 1 << N> m_b;
-    std::array<double, 1 << N> m_a;
+    std::array<Real_t, 1 << N> m_b;
+    std::array<Real_t, 1 << N> m_a;
   };
 
 }

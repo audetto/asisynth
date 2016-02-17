@@ -10,10 +10,10 @@ extern "C"
 
 namespace ASI
 {
-  void createButterBandPassFilter(const size_t order, const size_t sr, const double lower, const double upper, InitFilter & filter)
+  void createButterBandPassFilter(const size_t order, const size_t sr, const Real_t lower, const Real_t upper, InitFilter & filter)
   {
-    const double wl = 2.0 * lower / sr;
-    const double wh = 2.0 * upper / sr;
+    const Real_t wl = 2.0 * lower / sr;
+    const Real_t wh = 2.0 * upper / sr;
 
     int * ccof = ccof_bwbp(order);             // b
     double * dcof = dcof_bwbp(order, wl, wh);  // a
@@ -22,17 +22,17 @@ namespace ASI
       throw std::runtime_error("Cannot create filter");
     }
 
-    const double scalingFactor = sf_bwbp(order, wl, wh);
+    const Real_t scalingFactor = sf_bwbp(order, wl, wh);
 
     const size_t numberOfCoefficients = 2 * order + 1;
 
-    std::vector<double> b(ccof, ccof + numberOfCoefficients);
-    for (double & value: b)
+    std::vector<Real_t> b(ccof, ccof + numberOfCoefficients);
+    for (Real_t & value: b)
     {
       value *= scalingFactor;
     }
 
-    std::vector<double> a(dcof, dcof + numberOfCoefficients);
+    std::vector<Real_t> a(dcof, dcof + numberOfCoefficients);
 
     filter.init(b, a);
 
