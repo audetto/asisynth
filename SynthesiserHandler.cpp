@@ -9,33 +9,34 @@
 
 namespace
 {
+  using ASI::Real_t;
 
-  double sawtooth(double x)
+  Real_t sawtooth(Real_t x)
   {
     // period 1, range [-1, 1]
     return 2.0 * (x - std::floor(0.5 + x));
   }
 
-  double triangle(double x)
+  Real_t triangle(Real_t x)
   {
     // period 1, range [-1, 1]
     return 2.0 * std::abs(sawtooth(x)) - 1.0;
   }
 
-  double square(double x)
+  Real_t square(Real_t x)
   {
     return x - std::floor(x) > 0.5 ? 1.0 : -1.0;
   }
 
-  double noise()
+  Real_t noise()
   {
     static std::default_random_engine generator;
-    static std::uniform_real_distribution<double> distribution(-1.0, 1.0);
+    static std::uniform_real_distribution<Real_t> distribution(-1.0, 1.0);
 
     return distribution(generator);
   }
 
-  double wave(double x, ASI::Wave type)
+  Real_t wave(Real_t x, ASI::Wave type)
   {
     switch (type)
     {
@@ -48,29 +49,29 @@ namespace
     }
   }
 
-  void generateSample(const size_t size, const std::vector<ASI::Harmonic> & harmonics, std::vector<double> & samples)
+  void generateSample(const size_t size, const std::vector<ASI::Harmonic> & harmonics, std::vector<Real_t> & samples)
   {
     samples.resize(size + 1);
 
-    double sumOfAmplitudes = 0.0;
+    Real_t sumOfAmplitudes = 0.0;
     for (const ASI::Harmonic & h : harmonics)
     {
       sumOfAmplitudes += h.amplitude;
     }
 
-    const double coeff = 1.0 / size;
+    const Real_t coeff = 1.0 / size;
 
     for (size_t i = 0; i < size; ++i)
     {
-      const double t = i * coeff;
+      const Real_t t = i * coeff;
 
-      double total = 0.0;
+      Real_t total = 0.0;
       for (const ASI::Harmonic & h : harmonics)
       {
-	const double frequency = 1.0 * h.mult;
-	const double x = t * frequency + h.phase;
-	const double amplitude = h.amplitude / sumOfAmplitudes;
-	const double w = wave(x, h.type) * amplitude;
+	const Real_t frequency = 1.0 * h.mult;
+	const Real_t x = t * frequency + h.phase;
+	const Real_t amplitude = h.amplitude / sumOfAmplitudes;
+	const Real_t w = wave(x, h.type) * amplitude;
 	total += w;
       }
       samples[i] = total;
@@ -80,11 +81,11 @@ namespace
     samples.back() = samples.front();
   }
 
-  double interpolateSample(const size_t size, const std::vector<double> & samples, const double x)
+  Real_t interpolateSample(const size_t size, const std::vector<Real_t> & samples, const Real_t x)
   {
-    const double fx = x - size_t(x);
+    const Real_t fx = x - size_t(x);
     const size_t pos = size_t(fx * size);
-    const double w = samples[pos];
+    const Real_t w = samples[pos];
     return w;
   }
 
@@ -123,14 +124,14 @@ namespace ASI
 
     // adjust vibrato sample to include amplitude multiplier
     // the amplitude in the configuration file is in Number of Semitones
-    const double vibratoAmplitude = m_parameters->vibrato.amplitude * log(2.0) / 12.0;
-    for (double & value : m_work.vibratoSamples)
+    const Real_t vibratoAmplitude = m_parameters->vibrato.amplitude * log(2.0) / 12.0;
+    for (Real_t & value : m_work.vibratoSamples)
     {
       value = exp(value * vibratoAmplitude);
     }
 
     // adjust tremolo sample to include amplitude multiplier and offset to 1
-    for (double & value : m_work.tremoloSamples)
+    for (Real_t & value : m_work.tremoloSamples)
     {
       value = 1.0 + value * m_parameters->tremolo.amplitude;
     }
@@ -192,21 +193,21 @@ namespace ASI
 
   }
 
-  double SynthesiserHandler::processNotes(const jack_nframes_t absTime)
+  Real_t SynthesiserHandler::processNotes(const jack_nframes_t absTime)
   {
-    const double phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
-    const double coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
+    const Real_t phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
+    const Real_t coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
 
-    const double phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
-    const double coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
+    const Real_t phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
+    const Real_t coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
 
     // if the sustain pedal is pressed
     // RELEASE behaves the same as SUSTAIN
     // we could work on the status
     // but this uses less "if"
-    const double releaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
+    const Real_t releaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
 
-    double total = 0.0;
+    Real_t total = 0.0;
     for (Note & note : m_work.notes)
     {
       switch (note.status)
@@ -281,11 +282,11 @@ namespace ASI
       // is it needed?
       note.amplitude = (note.amplitude * m_parameters->adsr.averageSize + note.current) / (m_parameters->adsr.averageSize + 1.0);
 
-      const double deltaPhase = note.frequency * m_work.timeMultiplier * coeffOfLFOVibrato;
+      const Real_t deltaPhase = note.frequency * m_work.timeMultiplier * coeffOfLFOVibrato;
 
-      const double x = note.phase + deltaPhase;
-      const double w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, x);
-      double value = w * note.amplitude * note.volume;
+      const Real_t x = note.phase + deltaPhase;
+      const Real_t w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, x);
+      Real_t value = w * note.amplitude * note.volume;
       note.phase = x;
 
       value = note.filter.process(value);
@@ -293,8 +294,8 @@ namespace ASI
       total += value;
     }
 
-    const double signal = total * coeffOfLFOTremolo;
-    const double filtered = m_work.filter.process(signal);
+    const Real_t signal = total * coeffOfLFOTremolo;
+    const Real_t filtered = m_work.filter.process(signal);
 
     return filtered;
   }
@@ -303,7 +304,7 @@ namespace ASI
   {
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
 
-    // this is float
+    // this is Real_t
     jack_default_audio_sample_t* outPortBuf = (jack_default_audio_sample_t *)jack_port_get_buffer(m_outputPort, nframes);
 
     jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
@@ -325,7 +326,7 @@ namespace ASI
       const jack_nframes_t absTime = framesAtStart + i;
 
       processMIDIEvent(eventCount, i, absTime, inPortBuf, eventIndex, inEvent);
-      const double w = processNotes(absTime);
+      const Real_t w = processNotes(absTime);
 
       outPortBuf[i] = w;
     }
@@ -349,10 +350,10 @@ namespace ASI
 
   void SynthesiserHandler::noteOn(const jack_nframes_t time, const jack_midi_data_t n, const jack_midi_data_t velocity)
   {
-    const double base = std::pow(2.0, (n - 69) / 12.0) * 440.0;
+    const Real_t base = std::pow(2.0, (n - 69) / 12.0) * 440.0;
 
-    const double coeff = pow(velocity / 127.0, m_parameters->velocityPower);
-    const double volume = m_parameters->volume * coeff;
+    const Real_t coeff = pow(velocity / 127.0, m_parameters->velocityPower);
+    const Real_t volume = m_parameters->volume * coeff;
 
     Note * newNote = nullptr;
 
@@ -389,8 +390,8 @@ namespace ASI
       note.current = 0.0;
       note.amplitude = 0.0;
 
-      const double lower = base / m_parameters->iir.lower;
-      const double upper = base * m_parameters->iir.upper;
+      const Real_t lower = base / m_parameters->iir.lower;
+      const Real_t upper = base * m_parameters->iir.upper;
       createButterBandPassFilter(m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
       return;
     }

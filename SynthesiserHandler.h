@@ -43,14 +43,14 @@ namespace ASI
     struct Note
     {
       jack_midi_data_t n;     // MIDI number
-      double frequency;       // base frequency
+      Real_t frequency;       // base frequency
       jack_nframes_t t0;      // start time
-      double phase;           // current phase
-      double volume;          // note volume
+      Real_t phase;           // current phase
+      Real_t volume;          // note volume
 
       Status status;
-      double current;         // linear ADSR
-      double amplitude;       // smooth ADSR
+      Real_t current;         // linear ADSR
+      Real_t amplitude;       // smooth ADSR
 
       Filter<4> filter;
     };
@@ -62,21 +62,21 @@ namespace ASI
       std::vector<Note> notes;
 
       // table with 1 period of the note
-      std::vector<double> samples;
+      std::vector<Real_t> samples;
 
-      std::vector<double> vibratoSamples;
-      std::vector<double> tremoloSamples;
+      std::vector<Real_t> vibratoSamples;
+      std::vector<Real_t> tremoloSamples;
 
       jack_nframes_t sampleRate;
 
       bool sustain;  // the pedal
 
-      double attackDelta;
-      double decayDelta;
-      double sustainDelta;
-      double releaseDelta;
-      double timeMultiplier;
-      double interpolationMultiplier;
+      Real_t attackDelta;
+      Real_t decayDelta;
+      Real_t sustainDelta;
+      Real_t releaseDelta;
+      Real_t timeMultiplier;
+      Real_t interpolationMultiplier;
 
       Filter<4> filter;
     };
@@ -92,7 +92,7 @@ namespace ASI
     void allNotesOff();
 
     void processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event);
-    double processNotes(const jack_nframes_t absTime);
+    Real_t processNotes(const jack_nframes_t absTime);
 
     void initialise();
   };

@@ -6,6 +6,8 @@
 
 namespace ASI
 {
+  typedef float Real_t;
+
   enum Wave
   {
     SINE,
@@ -27,25 +29,25 @@ namespace ASI
   struct Harmonic
   {
     size_t mult;
-    double amplitude;
-    double phase;
+    Real_t amplitude;
+    Real_t phase;
     Wave type;
   };
 
   struct ADSR
   {
-    double peak;
-    double attackTime;
-    double decayTime;
-    double sustainTime;
-    double releaseTime;
-    double averageSize;     // low pass filter for ADSR
+    Real_t peak;
+    Real_t attackTime;
+    Real_t decayTime;
+    Real_t sustainTime;
+    Real_t releaseTime;
+    Real_t averageSize;     // low pass filter for ADSR
   };
 
   struct LFO
   {
-    double frequency;
-    double amplitude;
+    Real_t frequency;
+    Real_t amplitude;
     std::vector<Harmonic> harmonics;
   };
 
@@ -53,15 +55,15 @@ namespace ASI
   {
     Pass pass;
     size_t order;
-    double lower;
-    double upper;
+    Real_t lower;
+    Real_t upper;
   };
 
   struct Parameters
   {
     size_t poliphony;
-    double volume;          // note volume
-    double velocityPower;   // velocity ^ power * volume
+    Real_t volume;          // note volume
+    Real_t velocityPower;   // velocity ^ power * volume
 
     ADSR adsr;
     LFO vibrato;

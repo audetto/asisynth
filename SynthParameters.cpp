@@ -7,6 +7,8 @@ using json = nlohmann::json;
 
 namespace
 {
+  using ASI::Real_t;
+
   ASI::Wave strToWave(const std::string & s)
   {
     if (s == "sine")
@@ -32,8 +34,8 @@ namespace
     for (const json & h : params)
     {
       const size_t mult = h[0];
-      const double amplitude = h[1];
-      const double phase = h[2];
+      const Real_t amplitude = h[1];
+      const Real_t phase = h[2];
       const std::string str = h[3];
 
       const ASI::Wave w = strToWave(str);
