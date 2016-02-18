@@ -342,6 +342,11 @@ namespace ASI
     m_work.releaseDelta = 1.0 / m_parameters->adsr.releaseTime / nframes;
     m_work.timeMultiplier = 1.0 / nframes;
     m_work.sampleRate = nframes;
+
+    for (size_t i = 0; i < 10; ++i)
+    {
+      noteOn(0, 50 + i, 100);
+    }
   }
 
   void SynthesiserHandler::shutdown()
