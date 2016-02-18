@@ -3,6 +3,7 @@
 #include "IIRFactory.h"
 
 #include <cmath>
+#include <cstring>
 #include <iomanip>
 #include <random>
 #include <iostream>
@@ -193,13 +194,12 @@ namespace ASI
 
   }
 
-  Real_t SynthesiserHandler::processNotes(const jack_nframes_t absTime)
+  void SynthesiserHandler::processNote(const jack_nframes_t nframes, Note & note, jack_default_audio_sample_t * output)
   {
-    const Real_t phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
-    const Real_t coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
-
-    const Real_t phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
-    const Real_t coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
+    if (note.status == EMPTY)
+    {
+      return;
+    }
 
     // if the sustain pedal is pressed
     // RELEASE behaves the same as SUSTAIN
@@ -207,9 +207,10 @@ namespace ASI
     // but this uses less "if"
     const Real_t releaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
 
-    Real_t total = 0.0;
-    for (Note & note : m_work.notes)
+    for (size_t i = 0; i < nframes; ++i)
     {
+      const jack_nframes_t absTime = m_work.time + i;
+
       switch (note.status)
       {
       case ATTACK:
@@ -274,9 +275,16 @@ namespace ASI
 	}
       case EMPTY:
 	{
+	  m_work.buffer[i] = 0.0;
 	  continue;
 	}
       };
+
+      const Real_t phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
+      const Real_t coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
+
+      const Real_t phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
+      const Real_t coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
 
       // this is a low pass filter to smooth the ADSR
       // is it needed?
@@ -289,15 +297,28 @@ namespace ASI
       Real_t value = w * note.amplitude * note.volume;
       note.phase = x;
 
-      value = note.filter.process(value);
-
-      total += value;
+      m_work.buffer[i] = value * coeffOfLFOTremolo;
     }
 
-    const Real_t signal = total * coeffOfLFOTremolo;
-    const Real_t filtered = m_work.filter.process(signal);
+    note.filter.process(m_work.buffer.data(), m_work.buffer.size());
 
-    return filtered;
+    for (size_t i = 0; i < nframes; ++i)
+    {
+      output[i] += m_work.buffer[i];
+    }
+  }
+
+  void SynthesiserHandler::processNotes(const jack_nframes_t nframes, jack_default_audio_sample_t * output)
+  {
+    m_work.buffer.resize(nframes);
+    memset(output, 0, sizeof(jack_default_audio_sample_t) * nframes);
+
+    for (Note & note : m_work.notes)
+    {
+      processNote(nframes, note, output);
+    }
+
+    m_work.filter.process(output, nframes);
   }
 
   void SynthesiserHandler::process(const jack_nframes_t nframes)
@@ -311,7 +332,7 @@ namespace ASI
 
     // should we ask JACK for current time instead?
     // calling jack_last_frame_time(m_client);
-    jack_nframes_t framesAtStart = m_work.time;
+    //    jack_nframes_t framesAtStart = m_work.time;
 
     jack_nframes_t eventIndex = 0;
 
@@ -320,17 +341,15 @@ namespace ASI
     {
       jack_midi_event_get(&inEvent, inPortBuf, eventIndex);
     }
-
+    /*
     for(size_t i = 0; i < nframes; ++i)
     {
       const jack_nframes_t absTime = framesAtStart + i;
 
       processMIDIEvent(eventCount, i, absTime, inPortBuf, eventIndex, inEvent);
-      const Real_t w = processNotes(absTime);
-
-      outPortBuf[i] = w;
     }
-
+    */
+    processNotes(nframes, outPortBuf);
     m_work.time += nframes;
   }
 
@@ -342,6 +361,11 @@ namespace ASI
     m_work.releaseDelta = 1.0 / m_parameters->adsr.releaseTime / nframes;
     m_work.timeMultiplier = 1.0 / nframes;
     m_work.sampleRate = nframes;
+
+    for (size_t i = 0; i < 10; ++i)
+    {
+      noteOn(0, 50 + i, 100);
+    }
   }
 
   void SynthesiserHandler::shutdown()

@@ -64,36 +64,37 @@ namespace ASI
       m_a[0] = 0.0;
     }
 
-    Real_t process(const Real_t x)
+    void process(const Real_t * x, const size_t n)
     {
-      // add it
-      m_x[m_pos & ((1 << N) - 1)] = x;
-      // now (till end of function m_pos is the last position written to)
-
-      Real_t sum_y = 0.0;
-      Real_t sum_x = 0.0;
-      for (size_t i = 0; i < m_sizeOfAB; ++i)
+      for (size_t i = 0; i < n; ++i)
       {
-	// on the first iteration we read from m_pos
-	// which has just been written to
-	const ssize_t k = (m_pos - i) & ((1 << N) - 1);
-	sum_x += m_x[k] * m_b[i];
+	// add it
+	m_x[m_pos & ((1 << N) - 1)] = x[i];
+	// now (till end of function m_pos is the last position written to)
 
-	// on the first iteration m_a[0] = 0
-	// the,the next we read from m_pos - 1
-	// which was written to on the previous call to ::process()
-	sum_y += m_y[k] * m_a[i];
+	Real_t sum_y = 0.0;
+	Real_t sum_x = 0.0;
+	for (size_t i = 0; i < m_sizeOfAB; ++i)
+	{
+	  // on the first iteration we read from m_pos
+	  // which has just been written to
+	  const ssize_t k = (m_pos - i) & ((1 << N) - 1);
+	  sum_x += m_x[k] * m_b[i];
+
+	  // on the first iteration m_a[0] = 0
+	  // the,the next we read from m_pos - 1
+	  // which was written to on the previous call to ::process()
+	  sum_y += m_y[k] * m_a[i];
+	}
+
+	const Real_t y = sum_x - sum_y;
+
+	// write to
+	m_y[m_pos & ((1 << N) - 1)] = y;
+
+	// advance pointers
+	++m_pos;
       }
-
-      const Real_t y = sum_x - sum_y;
-
-      // write to
-      m_y[m_pos & ((1 << N) - 1)] = y;
-
-      // advance pointers
-      ++m_pos;
-
-      return y;
     }
 
   private:
