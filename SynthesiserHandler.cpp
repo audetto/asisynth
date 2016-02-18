@@ -178,6 +178,12 @@ namespace ASI
 	  case MIDI_CC_SUSTAIN:
 	    {
 	      m_work.sustain = n2 >= 64;
+	      // if the sustain pedal is pressed
+	      // RELEASE behaves the same as SUSTAIN
+	      // we could work on the status
+	      // but this uses less "if"
+	      m_work.actualReleaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
+
 	      break;
 	    }
 	  }
@@ -201,16 +207,8 @@ namespace ASI
       return;
     }
 
-    // if the sustain pedal is pressed
-    // RELEASE behaves the same as SUSTAIN
-    // we could work on the status
-    // but this uses less "if"
-    const Real_t releaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
-
     for (size_t i = 0; i < nframes; ++i)
     {
-      const jack_nframes_t absTime = m_work.time + i;
-
       switch (note.status)
       {
       case ATTACK:
@@ -246,7 +244,7 @@ namespace ASI
       case RELEASE:
 	{
 	  // same as SUSTAIN if the pedal is down
-	  note.current -= releaseDelta;
+	  note.current -= m_work.actualReleaseDelta;
 	  if (note.current <= 0.0)
 	  {
 	    note.current = 0.0;
@@ -280,24 +278,17 @@ namespace ASI
 	}
       };
 
-      const Real_t phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
-      const Real_t coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
-
-      const Real_t phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
-      const Real_t coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
-
       // this is a low pass filter to smooth the ADSR
       // is it needed?
       note.amplitude = (note.amplitude * m_parameters->adsr.averageSize + note.current) / (m_parameters->adsr.averageSize + 1.0);
 
-      const Real_t deltaPhase = note.frequency * m_work.timeMultiplier * coeffOfLFOVibrato;
+      const Real_t deltaPhase = note.frequency * m_work.timeMultiplier * m_work.vibratoBuffer[i];
 
       const Real_t x = note.phase + deltaPhase;
       const Real_t w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, x);
-      Real_t value = w * note.amplitude * note.volume;
+      const Real_t value = w * note.amplitude * note.volume;
+      m_work.buffer[i] = value;
       note.phase = x;
-
-      m_work.buffer[i] = value * coeffOfLFOTremolo;
     }
 
     note.filter.process(m_work.buffer.data(), m_work.buffer.size());
@@ -313,9 +304,28 @@ namespace ASI
     m_work.buffer.resize(nframes);
     memset(output, 0, sizeof(jack_default_audio_sample_t) * nframes);
 
+    m_work.vibratoBuffer.resize(nframes);
+    for (size_t i = 0; i < nframes; ++i)
+    {
+      const jack_nframes_t absTime = m_work.time + i;
+      const Real_t phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
+      const Real_t coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
+
+      m_work.vibratoBuffer[i] = coeffOfLFOVibrato;
+    }
+
     for (Note & note : m_work.notes)
     {
       processNote(nframes, note, output);
+    }
+
+    for (size_t i = 0; i < nframes; ++i)
+    {
+      const jack_nframes_t absTime = m_work.time + i;
+      const Real_t phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
+      const Real_t coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
+
+      output[i] *= coeffOfLFOTremolo;
     }
 
     m_work.filter.process(output, nframes);
@@ -350,6 +360,7 @@ namespace ASI
     }
     */
     processNotes(nframes, outPortBuf);
+
     m_work.time += nframes;
   }
 
@@ -359,6 +370,7 @@ namespace ASI
     m_work.decayDelta = (m_parameters->adsr.peak - 1.0) / m_parameters->adsr.decayTime / nframes;
     m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
     m_work.releaseDelta = 1.0 / m_parameters->adsr.releaseTime / nframes;
+    m_work.actualReleaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
     m_work.timeMultiplier = 1.0 / nframes;
     m_work.sampleRate = nframes;
 

@@ -64,12 +64,12 @@ namespace ASI
       m_a[0] = 0.0;
     }
 
-    void process(const Real_t * x, const size_t n)
+    void process(Real_t * x, const size_t n)
     {
-      for (size_t i = 0; i < n; ++i)
+      for (size_t j = 0; j < n; ++j)
       {
 	// add it
-	m_x[m_pos & ((1 << N) - 1)] = x[i];
+	m_x[m_pos & ((1 << N) - 1)] = x[j];
 	// now (till end of function m_pos is the last position written to)
 
 	Real_t sum_y = 0.0;
@@ -91,6 +91,7 @@ namespace ASI
 
 	// write to
 	m_y[m_pos & ((1 << N) - 1)] = y;
+	x[j] = y;
 
 	// advance pointers
 	++m_pos;

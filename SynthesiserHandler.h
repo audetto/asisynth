@@ -68,6 +68,7 @@ namespace ASI
       std::vector<Real_t> tremoloSamples;
 
       std::vector<Real_t> buffer;
+      std::vector<Real_t> vibratoBuffer;
 
       jack_nframes_t sampleRate;
 
@@ -77,6 +78,7 @@ namespace ASI
       Real_t decayDelta;
       Real_t sustainDelta;
       Real_t releaseDelta;
+      Real_t actualReleaseDelta;
       Real_t timeMultiplier;
       Real_t interpolationMultiplier;
 
