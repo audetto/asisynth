@@ -136,6 +136,10 @@ namespace ASI
     {
       value = 1.0 + value * m_parameters->tremolo.amplitude;
     }
+
+    // so we do not allocate during "process callback"
+    m_work.buffer.reserve(8192);
+    m_work.vibratoBuffer.reserve(8192);
   }
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
