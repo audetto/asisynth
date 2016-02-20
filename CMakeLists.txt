@@ -28,6 +28,5 @@ target_link_libraries(asisynth boost_program_options)
 target_link_libraries(asisynth sigproc)
 
 set_property(TARGET asisynth PROPERTY CXX_STANDARD 11)
-set_property(TARGET iir_time PROPERTY CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -march=native -ffast-math")
