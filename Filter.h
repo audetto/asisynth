@@ -30,6 +30,8 @@ namespace ASI
       m_b[0] = 1.0;
       m_a[0] = 0.0;               // a is normalised!
       m_sizeOfAB = 1;
+
+      m_buffer.resize(8192);
     }
 
     virtual void init(std::vector<Real_t> b, std::vector<Real_t> a) override
@@ -57,16 +59,81 @@ namespace ASI
       m_sizeOfAB = std::max(b.size(), a.size());
 
       // normalise so we do not need to worry about m_a[0] later
-      for (size_t i = 1; i < m_sizeOfAB; ++i)
+      for (ssize_t i = 1; i < m_sizeOfAB; ++i)
       {
 	m_a[i] /= m_a[0];
       }
       m_a[0] = 0.0;
     }
 
-    void process(Real_t * x, const size_t n)
+    void process(Real_t * x, const ssize_t n)
     {
-      for (size_t j = 0; j < n; ++j)
+      // calculation of x
+      for (ssize_t j = 0; j < m_sizeOfAB; ++j)
+      {
+	Real_t dot = 0.0;
+	for (ssize_t i = 0; i < m_sizeOfAB; ++i)
+	{
+	  if (j - i >= 0)
+	    dot += x[j - i] * m_b[i];
+	  else
+	    dot += m_x[i - j] * m_b[i];
+	}
+	m_buffer[j] = dot;
+      }
+
+      for (ssize_t j = m_sizeOfAB; j < n; ++j)
+      {
+	Real_t dot = 0.0;
+	for (ssize_t i = 0; i < m_sizeOfAB; ++i)
+	{
+	  dot += x[j - i] * m_b[i];
+	}
+	m_buffer[j] = dot;
+      }
+
+      // prepare for next time
+      for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+      {
+	m_x[i] = x[n - i];
+      }
+
+      // calculation of y
+      // x is the output
+      for (ssize_t j = 0; j < m_sizeOfAB; ++j)
+      {
+	Real_t dot = 0.0;
+	for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+	{
+	  if (j - i >= 0)
+	    dot += x[j - i] * m_a[i];
+	  else
+	    dot += m_y[i - j] * m_a[i];
+	}
+	x[j] = m_buffer[j] - dot;
+      }
+
+      for (ssize_t j = m_sizeOfAB; j < n; ++j)
+      {
+	Real_t dot = 0.0;
+	for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+	{
+	  dot += x[j - i] * m_a[i];
+	}
+	x[j] = m_buffer[j] - dot;
+      }
+
+      // prepare for next time
+      for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+      {
+	m_y[i] = x[n - i];
+      }
+
+    }
+
+    void process9(Real_t * x, const ssize_t n)
+    {
+      for (ssize_t j = 0; j < n; ++j)
       {
 	// add it
 	m_x[m_pos & ((1 << N) - 1)] = x[j];
@@ -74,7 +141,9 @@ namespace ASI
 
 	Real_t sum_y = 0.0;
 	Real_t sum_x = 0.0;
-	for (size_t i = 0; i < m_sizeOfAB; ++i)
+
+#pragma omp simd
+	for (ssize_t i = 0; i < m_sizeOfAB; ++i)
 	{
 	  // on the first iteration we read from m_pos
 	  // which has just been written to
@@ -91,6 +160,7 @@ namespace ASI
 
 	// write to
 	m_y[m_pos & ((1 << N) - 1)] = y;
+
 	x[j] = y;
 
 	// advance pointers
@@ -104,9 +174,11 @@ namespace ASI
     std::array<Real_t, 1 << N> m_x;
     std::array<Real_t, 1 << N> m_y;
 
-    size_t m_sizeOfAB;
+    ssize_t m_sizeOfAB;
     std::array<Real_t, 1 << N> m_b;
     std::array<Real_t, 1 << N> m_a;
+
+    std::vector<Real_t> m_buffer;
   };
 
 }
