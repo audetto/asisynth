@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <array>
+#include <cstring>
 
 namespace ASI
 {
@@ -66,7 +67,8 @@ namespace ASI
       m_a[0] = 0.0;
     }
 
-    void process(Real_t * x, const ssize_t n)
+    // old
+    void process3(Real_t * x, const ssize_t n)
     {
       // calculation of x
       for (ssize_t j = 0; j < m_sizeOfAB; ++j)
@@ -128,10 +130,73 @@ namespace ASI
       {
 	m_y[i] = x[n - i];
       }
-
     }
 
-    void process9(Real_t * x, const ssize_t n)
+    // new
+    void process(Real_t * x, const ssize_t n)
+    {
+      memset(m_buffer.data(), 0, sizeof(Real_t) * n);
+
+      // calculation of x
+      for (ssize_t i = 0; i < m_sizeOfAB; ++i)
+      {
+	for (ssize_t j = 0; j < m_sizeOfAB; ++j)
+	{
+	  if (j - i >= 0)
+	    m_buffer[j] += x[j - i] * m_b[i];
+	  else
+	    m_buffer[j] += m_x[i - j] * m_b[i];
+	}
+      }
+
+      for (ssize_t i = 0; i < m_sizeOfAB; ++i)
+      {
+	for (ssize_t j = m_sizeOfAB; j < n; ++j)
+	{
+	  m_buffer[j] += x[j - i] * m_b[i];
+	}
+      }
+
+      // prepare for next time
+      for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+      {
+	m_x[i] = x[n - i];
+      }
+
+      // calculation of y
+      // x is the output
+      for (ssize_t j = 0; j < m_sizeOfAB; ++j)
+      {
+	Real_t dot = 0.0;
+	for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+	{
+	  if (j - i >= 0)
+	    dot += x[j - i] * m_a[i];
+	  else
+	    dot += m_y[i - j] * m_a[i];
+	}
+	x[j] = m_buffer[j] - dot;
+      }
+
+      for (ssize_t j = m_sizeOfAB; j < n; ++j)
+      {
+	Real_t dot = 0.0;
+	for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+	{
+	  dot += x[j - i] * m_a[i];
+	}
+	x[j] = m_buffer[j] - dot;
+      }
+
+      // prepare for next time
+      for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+      {
+	m_y[i] = x[n - i];
+      }
+    }
+
+    // very old
+    void process1(Real_t * x, const ssize_t n)
     {
       for (ssize_t j = 0; j < n; ++j)
       {
@@ -142,7 +207,6 @@ namespace ASI
 	Real_t sum_y = 0.0;
 	Real_t sum_x = 0.0;
 
-#pragma omp simd
 	for (ssize_t i = 0; i < m_sizeOfAB; ++i)
 	{
 	  // on the first iteration we read from m_pos
