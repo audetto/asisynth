@@ -152,9 +152,9 @@ int main(int argc, char **args)
   data.alive = true;
 
   /* run until interrupted */
-  //  while(data.alive)
+  while(data.alive)
   {
-    sleep(8);
+    sleep(1);
   }
 
   // detach all ports

@@ -332,7 +332,7 @@ namespace ASI
       output[i] *= coeffOfLFOTremolo;
     }
 
-    m_work.filter.process(output, nframes);
+    m_work.time += nframes;
   }
 
   void SynthesiserHandler::process(const jack_nframes_t nframes)
@@ -344,10 +344,6 @@ namespace ASI
 
     jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
-    // should we ask JACK for current time instead?
-    // calling jack_last_frame_time(m_client);
-    //    jack_nframes_t framesAtStart = m_work.time;
-
     jack_nframes_t eventIndex = 0;
 
     jack_midi_event_t inEvent;
@@ -355,17 +351,25 @@ namespace ASI
     {
       jack_midi_event_get(&inEvent, inPortBuf, eventIndex);
     }
-    /*
-    for(size_t i = 0; i < nframes; ++i)
+
+    jack_nframes_t position = 0;
+    while (position < nframes)
     {
-      const jack_nframes_t absTime = framesAtStart + i;
-
-      processMIDIEvent(eventCount, i, absTime, inPortBuf, eventIndex, inEvent);
+      jack_nframes_t process;
+      if (eventIndex < eventCount)
+      {
+	process = inEvent.time - position;
+      }
+      else
+      {
+	process = nframes - position;
+      }
+      processNotes(process, outPortBuf + position);
+      position += process;
+      processMIDIEvent(eventCount, position, m_work.time, inPortBuf, eventIndex, inEvent);
     }
-    */
-    processNotes(nframes, outPortBuf);
 
-    m_work.time += nframes;
+    m_work.filter.process(outPortBuf, nframes);
   }
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
