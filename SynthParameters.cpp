@@ -12,19 +12,19 @@ namespace
   ASI::Wave strToWave(const std::string & s)
   {
     if (s == "sine")
-      return ASI::SINE;
+      return ASI::Wave::SINE;
 
     if (s == "square")
-      return ASI::SQUARE;
+      return ASI::Wave::SQUARE;
 
     if (s == "sawtooth")
-      return ASI::SAWTOOTH;
+      return ASI::Wave::SAWTOOTH;
 
     if (s == "triangle")
-      return ASI::TRIANGLE;
+      return ASI::Wave::TRIANGLE;
 
     if (s == "noise")
-      return ASI::NOISE;
+      return ASI::Wave::NOISE;
 
     throw std::runtime_error("Unknown wave type");
   }
@@ -32,19 +32,19 @@ namespace
   ASI::Pass strToPass(const std::string & s)
   {
     if (s == "none")
-      return ASI::NONE;
+      return ASI::Pass::NONE;
 
     if (s == "lowpass")
-      return ASI::LOWPASS;
+      return ASI::Pass::LOWPASS;
 
     if (s == "highpass")
-      return ASI::HIGHPASS;
+      return ASI::Pass::HIGHPASS;
 
     if (s == "bandpass")
-      return ASI::BANDPASS;
+      return ASI::Pass::BANDPASS;
 
     if (s == "bandstop")
-      return ASI::BANDSTOP;
+      return ASI::Pass::BANDSTOP;
 
     throw std::runtime_error("Unknown pass type");
   }

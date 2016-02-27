@@ -14,12 +14,12 @@ namespace ASI
   {
     switch (pass)
     {
-    case BANDPASS:
+    case Pass::BANDPASS:
       {
 	createButterBandPassFilter(order, sr, lower, upper, filter);
 	break;
       }
-    case NONE:
+    case Pass::NONE:
     default:
       {
 	filter.resetFilter();

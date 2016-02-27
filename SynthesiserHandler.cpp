@@ -41,11 +41,11 @@ namespace
   {
     switch (type)
     {
-    case ASI::SINE: return std::sin(2.0 * M_PI * x);
-    case ASI::SAWTOOTH: return sawtooth(x);
-    case ASI::TRIANGLE: return triangle(x);
-    case ASI::SQUARE: return square(x);
-    case ASI::NOISE: return noise();
+    case ASI::Wave::SINE: return std::sin(2.0 * M_PI * x);
+    case ASI::Wave::SAWTOOTH: return sawtooth(x);
+    case ASI::Wave::TRIANGLE: return triangle(x);
+    case ASI::Wave::SQUARE: return square(x);
+    case ASI::Wave::NOISE: return noise();
     default: return 0;
     }
   }
