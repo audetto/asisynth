@@ -21,10 +21,6 @@ namespace ASI
     Filter()
     {
       // this is the next position to write to
-      m_pos = 0;
-
-      m_x.fill(0.0);
-      m_y.fill(0.0);
       m_b.fill(0.0);
       m_a.fill(0.0);
 
@@ -33,6 +29,7 @@ namespace ASI
       m_sizeOfAB = 1;
 
       m_buffer.resize(8192);
+      reset();
     }
 
     virtual void init(std::vector<Real_t> b, std::vector<Real_t> a) override
@@ -65,6 +62,16 @@ namespace ASI
 	m_a[i] /= m_a[0];
       }
       m_a[0] = 0.0;
+
+      reset();
+    }
+
+    void reset()
+    {
+      m_pos = 0;
+
+      m_x.fill(0.0);
+      m_y.fill(0.0);
     }
 
     // very old
@@ -133,10 +140,21 @@ namespace ASI
 	m_buffer[j] = dot;
       }
 
-      // prepare for next time
-      for (ssize_t i = 1; i < m_sizeOfAB; ++i)
+      if (n >= sizeOfAB - 1)
       {
-	m_x[i] = x[n - i];
+	// prepare for next time (copy sizeOfAB - 1 from the end)
+	for (ssize_t i = 1; i < sizeOfAB; ++i)
+	{
+	  m_x[i] = x[n - i];
+	}
+      }
+      else
+      {
+	memcpy(&m_x[n + 1], &m_x[1], sizeof(Real_t) * (sizeOfAB - 1 - n));
+	for (ssize_t i = 1; i <= n; ++i)
+	{
+	  m_x[i] = x[n - i];
+	}
       }
 
       // calculation of y
@@ -164,11 +182,23 @@ namespace ASI
 	x[j] = m_buffer[j] - dot;
       }
 
-      // prepare for next time
-      for (ssize_t i = 1; i < sizeOfAB; ++i)
+      if (n >= sizeOfAB - 1)
       {
-	m_y[i] = x[n - i];
+	// prepare for next time (copy sizeOfAB - 1 from the end)
+	for (ssize_t i = 1; i < sizeOfAB; ++i)
+	{
+	  m_y[i] = x[n - i];
+	}
       }
+      else
+      {
+	memcpy(&m_y[n + 1], &m_y[1], sizeof(Real_t) * (sizeOfAB - 1 - n));
+	for (ssize_t i = 1; i <= n; ++i)
+	{
+	  m_y[i] = x[n - i];
+	}
+      }
+
     }
 
     // new
@@ -192,10 +222,21 @@ namespace ASI
 	}
       }
 
-      // prepare for next time
-      for (ssize_t i = 1; i < sizeOfAB; ++i)
+      if (n >= sizeOfAB - 1)
       {
-	m_x[i] = x[n - i];
+	// prepare for next time (copy sizeOfAB - 1 from the end)
+	for (ssize_t i = 1; i < sizeOfAB; ++i)
+	{
+	  m_x[i] = x[n - i];
+	}
+      }
+      else
+      {
+	memcpy(&m_x[n + 1], &m_x[1], sizeof(Real_t) * (sizeOfAB - 1 - n));
+	for (ssize_t i = 1; i <= n; ++i)
+	{
+	  m_x[i] = x[n - i];
+	}
       }
 
       // calculation of y
@@ -224,15 +265,32 @@ namespace ASI
 	x[j] = m_buffer[j] - dot;
       }
 
-      // prepare for next time
-      for (ssize_t i = 1; i < sizeOfAB; ++i)
+      if (n >= sizeOfAB - 1)
       {
-	m_y[i] = x[n - i];
+	// prepare for next time (copy sizeOfAB - 1 from the end)
+	for (ssize_t i = 1; i < sizeOfAB; ++i)
+	{
+	  m_y[i] = x[n - i];
+	}
       }
+      else
+      {
+	memcpy(&m_y[n + 1], &m_y[1], sizeof(Real_t) * (sizeOfAB - 1 - n));
+	for (ssize_t i = 1; i <= n; ++i)
+	{
+	  m_y[i] = x[n - i];
+	}
+      }
+
     }
 
     void process(Real_t * x, const ssize_t n)
     {
+      if (n == 0)
+      {
+	return;
+      }
+
       switch (m_sizeOfAB)
       {
       case 1:

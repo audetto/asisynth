@@ -138,8 +138,8 @@ namespace ASI
     }
 
     // so we do not allocate during "process callback"
-    m_work.buffer.reserve(8192);
-    m_work.vibratoBuffer.reserve(8192);
+    m_work.buffer.resize(8192);
+    m_work.vibratoBuffer.resize(8192);
   }
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
@@ -295,7 +295,7 @@ namespace ASI
       note.phase = x;
     }
 
-    note.filter.process(m_work.buffer.data(), m_work.buffer.size());
+    note.filter.process(m_work.buffer.data(), nframes);
 
     for (size_t i = 0; i < nframes; ++i)
     {
@@ -305,10 +305,6 @@ namespace ASI
 
   void SynthesiserHandler::processNotes(const jack_nframes_t nframes, jack_default_audio_sample_t * output)
   {
-    m_work.buffer.resize(nframes);
-    memset(output, 0, sizeof(jack_default_audio_sample_t) * nframes);
-
-    m_work.vibratoBuffer.resize(nframes);
     for (size_t i = 0; i < nframes; ++i)
     {
       const jack_nframes_t absTime = m_work.time + i;
@@ -340,7 +336,9 @@ namespace ASI
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
 
     // this is Real_t
-    jack_default_audio_sample_t* outPortBuf = (jack_default_audio_sample_t *)jack_port_get_buffer(m_outputPort, nframes);
+    jack_default_audio_sample_t* output = (jack_default_audio_sample_t *)jack_port_get_buffer(m_outputPort, nframes);
+
+    memset(output, 0, sizeof(jack_default_audio_sample_t) * nframes);
 
     jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
@@ -355,21 +353,21 @@ namespace ASI
     jack_nframes_t position = 0;
     while (position < nframes)
     {
-      jack_nframes_t process;
+      jack_nframes_t toProcess;
       if (eventIndex < eventCount)
       {
-	process = inEvent.time - position;
+	toProcess = inEvent.time - position;
       }
       else
       {
-	process = nframes - position;
+	toProcess = nframes - position;
       }
-      processNotes(process, outPortBuf + position);
-      position += process;
+      processNotes(toProcess, output + position);
+      position += toProcess;
       processMIDIEvent(eventCount, position, m_work.time, inPortBuf, eventIndex, inEvent);
     }
 
-    m_work.filter.process(outPortBuf, nframes);
+    m_work.filter.process(output, nframes);
   }
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
