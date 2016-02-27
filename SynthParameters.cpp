@@ -29,6 +29,26 @@ namespace
     throw std::runtime_error("Unknown wave type");
   }
 
+  ASI::Pass strToPass(const std::string & s)
+  {
+    if (s == "none")
+      return ASI::NONE;
+
+    if (s == "lowpass")
+      return ASI::LOWPASS;
+
+    if (s == "highpass")
+      return ASI::HIGHPASS;
+
+    if (s == "bandpass")
+      return ASI::BANDPASS;
+
+    if (s == "bandstop")
+      return ASI::BANDSTOP;
+
+    throw std::runtime_error("Unknown pass type");
+  }
+
   void readHarmonics(const json & params, std::vector<ASI::Harmonic> & harmonics)
   {
     for (const json & h : params)
@@ -80,7 +100,7 @@ namespace ASI
     parameters->tremolo.amplitude = inParams["lfo"]["tremolo"]["amplitude"];
     readHarmonics(inParams["lfo"]["tremolo"]["harmonics"], parameters->tremolo.harmonics);
 
-    parameters->iir.pass = BANDPASS;
+    parameters->iir.pass = strToPass(inParams["filter"]["type"]);
     parameters->iir.order = inParams["filter"]["order"];
     parameters->iir.lower = inParams["filter"]["lower"];
     parameters->iir.upper = inParams["filter"]["upper"];

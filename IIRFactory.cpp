@@ -10,6 +10,25 @@ extern "C"
 
 namespace ASI
 {
+  void createFilter(const Pass pass, const size_t order, const size_t sr, const Real_t lower, const Real_t upper, InitFilter & filter)
+  {
+    switch (pass)
+    {
+    case BANDPASS:
+      {
+	createButterBandPassFilter(order, sr, lower, upper, filter);
+	break;
+      }
+    case NONE:
+    default:
+      {
+	filter.resetFilter();
+	break;
+      }
+    }
+  }
+
+
   void createButterBandPassFilter(const size_t order, const size_t sr, const Real_t lower, const Real_t upper, InitFilter & filter)
   {
     const Real_t wl = 2.0 * lower / sr;

@@ -434,7 +434,7 @@ namespace ASI
 
       const Real_t lower = base / m_parameters->iir.lower;
       const Real_t upper = base * m_parameters->iir.upper;
-      createButterBandPassFilter(m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
+      createFilter(m_parameters->iir.pass, m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
       return;
     }
 

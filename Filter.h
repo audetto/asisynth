@@ -12,6 +12,7 @@ namespace ASI
   {
   public:
     virtual void init(std::vector<Real_t> b, std::vector<Real_t> a) = 0;
+    virtual void resetFilter() = 0;
   };
 
   template <ssize_t N>
@@ -24,12 +25,9 @@ namespace ASI
       m_b.fill(0.0);
       m_a.fill(0.0);
 
-      m_b[0] = 1.0;
-      m_a[0] = 0.0;               // a is normalised!
-      m_sizeOfAB = 1;
-
       m_buffer.resize(8192);
-      reset();
+      resetData();
+      resetFilter();
     }
 
     virtual void init(std::vector<Real_t> b, std::vector<Real_t> a) override
@@ -63,10 +61,17 @@ namespace ASI
       }
       m_a[0] = 0.0;
 
-      reset();
+      resetData();
     }
 
-    void reset()
+    virtual void resetFilter()
+    {
+      m_b[0] = 1.0;
+      m_a[0] = 0.0;               // a is normalised!
+      m_sizeOfAB = 1;
+    }
+
+    void resetData()
     {
       m_pos = 0;
 
