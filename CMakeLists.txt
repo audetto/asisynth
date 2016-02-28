@@ -18,6 +18,8 @@ add_executable(asisynth
   SuperLegatoHandler.cpp
   SynthesiserHandler.cpp
   SynthParameters.cpp
+  player/PlayerParameters.cpp
+  player/PlayerHandler.cpp
   )
 
 add_library(sigproc

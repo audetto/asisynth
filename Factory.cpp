@@ -4,6 +4,7 @@
 #include "ChordPlayerHandler.h"
 #include "DisplayHandler.h"
 #include "SynthesiserHandler.h"
+#include "player/PlayerHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -60,6 +61,12 @@ namespace ASI
       ("synth:params", po::value<std::string>(), "Prameters (json)");
     desc.add(synthesiserDesc);
 
+    po::options_description playerDesc("Player");
+    playerDesc.add_options()
+      ("player", "Player")
+      ("player:melody", po::value<std::string>(), "Melody (json)");
+    desc.add(playerDesc);
+
     po::variables_map vm;
     try
     {
@@ -110,6 +117,12 @@ namespace ASI
       {
 	const std::string parametersFile = vm["synth:params"].as<std::string>();
 	handlers.push_back(std::make_shared<ASI::SynthesiserHandler>(client, parametersFile));
+      }
+
+      if (vm.count("player"))
+      {
+	const std::string melodyFile = vm["player:melody"].as<std::string>();
+	handlers.push_back(std::make_shared<ASI::Player::PlayerHandler>(client, melodyFile));
       }
     }
     catch (const po::error& e)
