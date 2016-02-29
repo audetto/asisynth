@@ -1,31 +1,31 @@
 {
-    "tempo": 60,
+    "tempo": 120,
     "legato": 0.95,
-    "bars": [
-	{
+    "values":
+    [
+	{ "loop": {
 	    "repeat": 5,
-	    "chords": [
-		{
-		    "duration": 1,
-		    "velocity": 100,
-		    "notes": [60, 67]
-		},
-		{
-		    "duration": 1,
-		    "velocity": 100,
-		    "notes": [62, 69]
-		},
-		{
-		    "duration": 1,
-		    "velocity": 100,
-		    "notes": [64, 71]
-		},
-		{
-		    "duration": 1,
-		    "velocity": 100,
-		    "notes": [65, 72]
-		}
+	    "values":
+	    [
+		{ "chord": { "duration": 1, "velocity": 110, "notes": [60, 62, 63, 70, 72] } },
+		{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } },
+		{ "chord": { "duration": 1, "velocity":  80, "notes": [] } },
+		{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } }
 	    ]
-	}
+	} },
+	{ "chord": { "duration": 1, "velocity": 110, "notes": [60, 62, 63, 70, 72] } },
+	{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } },
+	{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } },
+	{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } },
+	{ "loop": {
+	    "repeat": 5,
+	    "values":
+	    [
+		{ "chord": { "duration": 1, "velocity": 110, "notes": [60, 62, 63, 70, 72] } },
+		{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } },
+		{ "chord": { "duration": 1, "velocity":  80, "notes": [] } },
+		{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } }
+	    ]
+	} }
     ]
 }

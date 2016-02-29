@@ -14,15 +14,9 @@ namespace ASI
       size_t velocity;
     };
 
-    struct Bar
-    {
-      size_t repeat;
-      std::vector<Chord> chords;
-    };
-
     struct Melody
     {
-      std::vector<Bar> bars;
+      std::vector<Chord> chords;
       size_t tempo;
       double legatoCoeff;
     };

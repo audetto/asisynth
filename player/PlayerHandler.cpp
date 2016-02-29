@@ -13,24 +13,17 @@ namespace
     events.clear();
 
     size_t beat = 0;
-    for (const ASI::Player::Bar & bar : melody.bars)
+    for (const ASI::Player::Chord & chord : melody.chords)
     {
-      const size_t repeat = bar.repeat;
-      for (size_t i = 0; i < repeat; ++i)
+      const size_t start = beat * 60 * sampleRate / melody.tempo;
+      const size_t end = (beat + chord.duration) * 60 * sampleRate / melody.tempo;
+      const size_t adjustedEnd = start + (end - start) * melody.legatoCoeff;
+      for (const size_t note : chord.notes)
       {
-	for (const ASI::Player::Chord & chord : bar.chords)
-	{
-	  const size_t start = beat * 60 * sampleRate / melody.tempo;
-	  const size_t end = (beat + chord.duration) * 60 * sampleRate / melody.tempo;
-	  const size_t adjustedEnd = start + (end - start) * melody.legatoCoeff;
-	  for (const size_t note : chord.notes)
-	  {
-	    events.emplace_back(start, MIDI_NOTEON, note, chord.velocity);
-	    events.emplace_back(adjustedEnd, MIDI_NOTEOFF, note, chord.velocity);
-	  }
-	  ++beat;
-	}
+	events.emplace_back(start, MIDI_NOTEON, note, chord.velocity);
+	events.emplace_back(adjustedEnd, MIDI_NOTEOFF, note, chord.velocity);
       }
+      ++beat;
     }
 
     std::sort(events.begin(), events.end());

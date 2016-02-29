@@ -9,6 +9,55 @@
 
 using json = nlohmann::json;
 
+namespace
+{
+  void processValues(const json & values, std::vector<ASI::Player::Chord> & chords);
+  void processLoop(const json & values, std::vector<ASI::Player::Chord> & chords);
+  void processChord(const json & values, std::vector<ASI::Player::Chord> & chords);
+
+  void processChord(const json & data, std::vector<ASI::Player::Chord> & chords)
+  {
+    ASI::Player::Chord chord;
+    chord.duration = data["duration"];
+    chord.velocity = data["velocity"];
+
+    for (const json & n : data["notes"])
+    {
+      const size_t midi = n;
+      chord.notes.push_back(midi);
+    }
+
+    chords.push_back(chord);
+  }
+
+  void processLoop(const json & data, std::vector<ASI::Player::Chord> & chords)
+  {
+    const size_t counter = data["repeat"];
+    std::vector<ASI::Player::Chord> values;
+    processValues(data["values"], values);
+
+    for (size_t i = 0; i < counter; ++i)
+    {
+      chords.insert(chords.end(), values.begin(), values.end());
+    }
+  }
+
+  void processValues(const json & values, std::vector<ASI::Player::Chord> & chords)
+  {
+    for (const json & v : values)
+    {
+      if (v.find("chord") != v.end())
+      {
+	processChord(v["chord"], chords);
+      }
+      else if (v.find("loop") != v.end())
+      {
+	processLoop(v["loop"], chords);
+      }
+    }
+  }
+}
+
 namespace ASI
 {
   namespace Player
@@ -24,26 +73,7 @@ namespace ASI
       melody->tempo = inParams["tempo"];
       melody->legatoCoeff = inParams["legato"];
 
-      for (const json & b : inParams["bars"])
-      {
-	Bar bar;
-	bar.repeat = b["repeat"];
-	for (const json & c : b["chords"])
-	{
-	  Chord chord;
-	  chord.duration = c["duration"];
-	  chord.velocity = c["velocity"];
-
-	  for (const json & n : c["notes"])
-	  {
-	    const size_t midi = n;
-	    chord.notes.push_back(midi);
-	  }
-
-	  bar.chords.push_back(chord);
-	}
-	melody->bars.push_back(bar);
-      }
+      processValues(inParams["values"], melody->chords);
 
       return melody;
     }
