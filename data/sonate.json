@@ -1,6 +1,8 @@
 {
-    "tempo": 120,
+    "tempo": 160,
+    "period": 8,
     "legato": 0.95,
+    "velocity": [[0, 110], [4, 90]],
     "values":
     [
 	{ "loop": {
@@ -18,7 +20,7 @@
 	{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } },
 	{ "chord": { "duration": 1, "velocity":  80, "notes": [60, 62, 63, 70, 72] } },
 	{ "loop": {
-	    "repeat": 5,
+	    "repeat": 16,
 	    "values":
 	    [
 		{ "chord": { "duration": 1, "velocity": 110, "notes": [60, 62, 63, 70, 72] } },

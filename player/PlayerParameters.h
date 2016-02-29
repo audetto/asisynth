@@ -11,7 +11,6 @@ namespace ASI
     {
       std::vector<size_t> notes;
       size_t duration;
-      size_t velocity;
     };
 
     struct Melody
@@ -19,6 +18,8 @@ namespace ASI
       std::vector<Chord> chords;
       size_t tempo;
       double legatoCoeff;
+      size_t period;
+      std::vector<std::pair<size_t, size_t> > velocity; // reminder, velocity
     };
 
     std::shared_ptr<const Melody> loadPlayerMelody(const std::string & filename);

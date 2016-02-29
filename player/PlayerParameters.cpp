@@ -19,7 +19,6 @@ namespace
   {
     ASI::Player::Chord chord;
     chord.duration = data["duration"];
-    chord.velocity = data["velocity"];
 
     for (const json & n : data["notes"])
     {
@@ -56,6 +55,14 @@ namespace
       }
     }
   }
+
+  void processVelocity(const json & data, std::vector<std::pair<size_t, size_t> > & velocity)
+  {
+    for (const json & k : data)
+    {
+      velocity.push_back(std::make_pair(k[0], k[1]));
+    }
+  }
 }
 
 namespace ASI
@@ -72,6 +79,9 @@ namespace ASI
 
       melody->tempo = inParams["tempo"];
       melody->legatoCoeff = inParams["legato"];
+      melody->period = inParams["period"];
+
+      processVelocity(inParams["velocity"], melody->velocity);
 
       processValues(inParams["values"], melody->chords);
 
