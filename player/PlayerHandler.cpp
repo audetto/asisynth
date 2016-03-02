@@ -90,6 +90,8 @@ namespace ASI
 	  }
 	  else
 	  {
+	    // stop everything
+	    allNotesOff(outPortBuf, inEvent.time);
 	    m_position = m_master.size();
 	  }
 	  m_active = newActive;
@@ -103,6 +105,8 @@ namespace ASI
 	const MidiEvent & event = m_master[m_position];
 	const jack_nframes_t newOffset = m_startFrame + event.m_time - framesAtStart;
 	jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
+	noteChange(event.m_data);
+
 	++m_position;
       }
     }
