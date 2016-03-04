@@ -1,8 +1,7 @@
 {
     "tempo": 160,
-    "period": 8,
     "legato": 0.95,
-    "velocity": [[0, 110], [4, 90]],
+    "velocity": [110, 64, 64, 64, 90, 64, 64, 64],
     "values":
     [
 	{ "loop": {

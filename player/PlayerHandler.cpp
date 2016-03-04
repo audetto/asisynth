@@ -8,35 +8,33 @@
 namespace
 {
 
-  size_t getVelocity(const size_t beat, const std::vector<std::pair<size_t, size_t> > & velocity, const size_t period, const size_t fallback)
+  size_t getVelocity(const size_t beat, const std::vector<size_t> & velocity)
   {
-    for (const std::pair<size_t, size_t> & data : velocity)
-    {
-      if (beat % period == data.first)
-      {
-	return data.second;
-      }
-    }
-
-    return fallback;
+    const size_t period = velocity.size();
+    const size_t position = beat % period;
+    return velocity[position];
   }
 
-  void processMelody(const ASI::Player::Melody & melody, const size_t sampleRate, std::vector<ASI::MidiEvent> & events)
+  void processMelody(const ASI::Player::Melody & melody, const size_t sampleRate, const size_t firstBeat, std::vector<ASI::MidiEvent> & events)
   {
     events.clear();
 
     size_t beat = 0;
     for (const ASI::Player::Chord & chord : melody.chords)
     {
-      const size_t velocity = getVelocity(beat, melody.velocity, melody.period, 64);
-
-      const size_t start = beat * 60 * sampleRate / melody.tempo;
-      const size_t end = (beat + chord.duration) * 60 * sampleRate / melody.tempo;
-      const size_t adjustedEnd = start + (end - start) * melody.legatoCoeff;
-      for (const size_t note : chord.notes)
+      if (beat >= firstBeat)
       {
-	events.emplace_back(start, MIDI_NOTEON, note, velocity);
-	events.emplace_back(adjustedEnd, MIDI_NOTEOFF, note, velocity);
+	const size_t adjBeat = beat - firstBeat;
+	const size_t velocity = getVelocity(beat, melody.velocity);
+
+	const size_t start = adjBeat * 60 * sampleRate / melody.tempo;
+	const size_t end = (adjBeat + chord.duration) * 60 * sampleRate / melody.tempo;
+	const size_t adjustedEnd = start + (end - start) * melody.legatoCoeff;
+	for (const size_t note : chord.notes)
+	{
+	  events.emplace_back(start, MIDI_NOTEON, note, velocity);
+	  events.emplace_back(adjustedEnd, MIDI_NOTEOFF, note, velocity);
+	}
       }
       ++beat;
     }
@@ -51,8 +49,8 @@ namespace ASI
   namespace Player
   {
 
-    PlayerHandler::PlayerHandler(jack_client_t * client, const std::string & melodyFile)
-      : InputOutputHandler(client)
+    PlayerHandler::PlayerHandler(jack_client_t * client, const std::string & melodyFile, const size_t firstBeat)
+      : InputOutputHandler(client), m_firstBeat(firstBeat)
     {
       m_inputPort = jack_port_register(m_client, "player_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
       m_outputPort = jack_port_register (m_client, "player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
@@ -113,7 +111,8 @@ namespace ASI
 
     void PlayerHandler::sampleRate(const jack_nframes_t nframes)
     {
-      processMelody(*m_melody, nframes, m_master);
+      processMelody(*m_melody, nframes, m_firstBeat, m_master);
+      // start in a "paused" position
       m_position = m_master.size();
     }
 

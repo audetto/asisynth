@@ -22,7 +22,7 @@ namespace ASI
     {
     public:
 
-      PlayerHandler(jack_client_t * client, const std::string & melodyFile);
+      PlayerHandler(jack_client_t * client, const std::string & melodyFile, const size_t firstBeat);
 
       virtual void process(const jack_nframes_t nframes);
 
@@ -31,6 +31,8 @@ namespace ASI
       virtual void shutdown();
 
     private:
+
+      const size_t m_firstBeat;
 
       std::shared_ptr<const Melody> m_melody;
       std::vector<MidiEvent> m_master;
