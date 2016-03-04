@@ -8,7 +8,7 @@ namespace ASI
 {
   typedef float Real_t;
 
-  enum Wave
+  enum class Wave
   {
     SINE,
     SAWTOOTH,
@@ -17,7 +17,7 @@ namespace ASI
     NOISE
   };
 
-  enum Pass
+  enum class Pass
   {
     NONE,
     LOWPASS,

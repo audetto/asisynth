@@ -3,6 +3,7 @@
 #include "IIRFactory.h"
 
 #include <cmath>
+#include <cstring>
 #include <iomanip>
 #include <random>
 #include <iostream>
@@ -40,11 +41,11 @@ namespace
   {
     switch (type)
     {
-    case ASI::SINE: return std::sin(2.0 * M_PI * x);
-    case ASI::SAWTOOTH: return sawtooth(x);
-    case ASI::TRIANGLE: return triangle(x);
-    case ASI::SQUARE: return square(x);
-    case ASI::NOISE: return noise();
+    case ASI::Wave::SINE: return std::sin(2.0 * M_PI * x);
+    case ASI::Wave::SAWTOOTH: return sawtooth(x);
+    case ASI::Wave::TRIANGLE: return triangle(x);
+    case ASI::Wave::SQUARE: return square(x);
+    case ASI::Wave::NOISE: return noise();
     default: return 0;
     }
   }
@@ -135,6 +136,10 @@ namespace ASI
     {
       value = 1.0 + value * m_parameters->tremolo.amplitude;
     }
+
+    // so we do not allocate during "process callback"
+    m_work.buffer.resize(8192);
+    m_work.vibratoBuffer.resize(8192);
   }
 
   void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
@@ -177,6 +182,12 @@ namespace ASI
 	  case MIDI_CC_SUSTAIN:
 	    {
 	      m_work.sustain = n2 >= 64;
+	      // if the sustain pedal is pressed
+	      // RELEASE behaves the same as SUSTAIN
+	      // we could work on the status
+	      // but this uses less "if"
+	      m_work.actualReleaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
+
 	      break;
 	    }
 	  }
@@ -193,22 +204,14 @@ namespace ASI
 
   }
 
-  Real_t SynthesiserHandler::processNotes(const jack_nframes_t absTime)
+  void SynthesiserHandler::processNote(const jack_nframes_t nframes, Note & note, jack_default_audio_sample_t * output)
   {
-    const Real_t phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
-    const Real_t coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
+    if (note.status == EMPTY)
+    {
+      return;
+    }
 
-    const Real_t phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
-    const Real_t coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
-
-    // if the sustain pedal is pressed
-    // RELEASE behaves the same as SUSTAIN
-    // we could work on the status
-    // but this uses less "if"
-    const Real_t releaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
-
-    Real_t total = 0.0;
-    for (Note & note : m_work.notes)
+    for (size_t i = 0; i < nframes; ++i)
     {
       switch (note.status)
       {
@@ -245,7 +248,7 @@ namespace ASI
       case RELEASE:
 	{
 	  // same as SUSTAIN if the pedal is down
-	  note.current -= releaseDelta;
+	  note.current -= m_work.actualReleaseDelta;
 	  if (note.current <= 0.0)
 	  {
 	    note.current = 0.0;
@@ -274,6 +277,7 @@ namespace ASI
 	}
       case EMPTY:
 	{
+	  m_work.buffer[i] = 0.0;
 	  continue;
 	}
       };
@@ -282,22 +286,52 @@ namespace ASI
       // is it needed?
       note.amplitude = (note.amplitude * m_parameters->adsr.averageSize + note.current) / (m_parameters->adsr.averageSize + 1.0);
 
-      const Real_t deltaPhase = note.frequency * m_work.timeMultiplier * coeffOfLFOVibrato;
+      const Real_t w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, note.phase);
+      const Real_t value = w * note.amplitude * note.volume;
+      m_work.buffer[i] = value;
 
-      const Real_t x = note.phase + deltaPhase;
-      const Real_t w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, x);
-      Real_t value = w * note.amplitude * note.volume;
-      note.phase = x;
-
-      value = note.filter.process(value);
-
-      total += value;
+      const Real_t deltaPhase = note.frequency * m_work.timeMultiplier * m_work.vibratoBuffer[i];
+      note.phase = note.phase + deltaPhase;
+      if (note.phase >= 1.0)
+      {
+	note.phase -= 1.0;
+      }
     }
 
-    const Real_t signal = total * coeffOfLFOTremolo;
-    const Real_t filtered = m_work.filter.process(signal);
+    note.filter.process(m_work.buffer.data(), nframes);
 
-    return filtered;
+    for (size_t i = 0; i < nframes; ++i)
+    {
+      output[i] += m_work.buffer[i];
+    }
+  }
+
+  void SynthesiserHandler::processNotes(const jack_nframes_t nframes, jack_default_audio_sample_t * output)
+  {
+    for (size_t i = 0; i < nframes; ++i)
+    {
+      const jack_nframes_t absTime = m_work.time + i;
+      const Real_t phaseOfLFOVibrato = absTime * m_parameters->vibrato.frequency * m_work.timeMultiplier;
+      const Real_t coeffOfLFOVibrato = interpolateSample(m_work.interpolationMultiplier, m_work.vibratoSamples, phaseOfLFOVibrato);
+
+      m_work.vibratoBuffer[i] = coeffOfLFOVibrato;
+    }
+
+    for (Note & note : m_work.notes)
+    {
+      processNote(nframes, note, output);
+    }
+
+    for (size_t i = 0; i < nframes; ++i)
+    {
+      const jack_nframes_t absTime = m_work.time + i;
+      const Real_t phaseOfLFOTremolo = absTime * m_parameters->tremolo.frequency * m_work.timeMultiplier;
+      const Real_t coeffOfLFOTremolo = interpolateSample(m_work.interpolationMultiplier, m_work.tremoloSamples, phaseOfLFOTremolo);
+
+      output[i] *= coeffOfLFOTremolo;
+    }
+
+    m_work.time += nframes;
   }
 
   void SynthesiserHandler::process(const jack_nframes_t nframes)
@@ -305,13 +339,11 @@ namespace ASI
     void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
 
     // this is Real_t
-    jack_default_audio_sample_t* outPortBuf = (jack_default_audio_sample_t *)jack_port_get_buffer(m_outputPort, nframes);
+    jack_default_audio_sample_t* output = (jack_default_audio_sample_t *)jack_port_get_buffer(m_outputPort, nframes);
+
+    memset(output, 0, sizeof(jack_default_audio_sample_t) * nframes);
 
     jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
-
-    // should we ask JACK for current time instead?
-    // calling jack_last_frame_time(m_client);
-    jack_nframes_t framesAtStart = m_work.time;
 
     jack_nframes_t eventIndex = 0;
 
@@ -321,17 +353,24 @@ namespace ASI
       jack_midi_event_get(&inEvent, inPortBuf, eventIndex);
     }
 
-    for(size_t i = 0; i < nframes; ++i)
+    jack_nframes_t position = 0;
+    while (position < nframes)
     {
-      const jack_nframes_t absTime = framesAtStart + i;
-
-      processMIDIEvent(eventCount, i, absTime, inPortBuf, eventIndex, inEvent);
-      const Real_t w = processNotes(absTime);
-
-      outPortBuf[i] = w;
+      jack_nframes_t toProcess;
+      if (eventIndex < eventCount)
+      {
+	toProcess = inEvent.time - position;
+      }
+      else
+      {
+	toProcess = nframes - position;
+      }
+      processNotes(toProcess, output + position);
+      position += toProcess;
+      processMIDIEvent(eventCount, position, m_work.time, inPortBuf, eventIndex, inEvent);
     }
 
-    m_work.time += nframes;
+    m_work.filter.process(output, nframes);
   }
 
   void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
@@ -340,6 +379,7 @@ namespace ASI
     m_work.decayDelta = (m_parameters->adsr.peak - 1.0) / m_parameters->adsr.decayTime / nframes;
     m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
     m_work.releaseDelta = 1.0 / m_parameters->adsr.releaseTime / nframes;
+    m_work.actualReleaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
     m_work.timeMultiplier = 1.0 / nframes;
     m_work.sampleRate = nframes;
   }
@@ -392,7 +432,7 @@ namespace ASI
 
       const Real_t lower = base / m_parameters->iir.lower;
       const Real_t upper = base * m_parameters->iir.upper;
-      createButterBandPassFilter(m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
+      createFilter(m_parameters->iir.pass, m_parameters->iir.order, m_work.sampleRate, lower, upper, note.filter);
       return;
     }
 

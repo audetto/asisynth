@@ -67,6 +67,9 @@ namespace ASI
       std::vector<Real_t> vibratoSamples;
       std::vector<Real_t> tremoloSamples;
 
+      std::vector<Real_t> buffer;
+      std::vector<Real_t> vibratoBuffer;
+
       jack_nframes_t sampleRate;
 
       bool sustain;  // the pedal
@@ -75,6 +78,7 @@ namespace ASI
       Real_t decayDelta;
       Real_t sustainDelta;
       Real_t releaseDelta;
+      Real_t actualReleaseDelta;
       Real_t timeMultiplier;
       Real_t interpolationMultiplier;
 
@@ -92,7 +96,9 @@ namespace ASI
     void allNotesOff();
 
     void processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event);
-    Real_t processNotes(const jack_nframes_t absTime);
+
+    void processNotes(const jack_nframes_t nframes, jack_default_audio_sample_t * output);
+    void processNote(const jack_nframes_t nframes, Note & note, jack_default_audio_sample_t * output);
 
     void initialise();
   };

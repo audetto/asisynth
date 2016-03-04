@@ -12,21 +12,41 @@ namespace
   ASI::Wave strToWave(const std::string & s)
   {
     if (s == "sine")
-      return ASI::SINE;
+      return ASI::Wave::SINE;
 
     if (s == "square")
-      return ASI::SQUARE;
+      return ASI::Wave::SQUARE;
 
     if (s == "sawtooth")
-      return ASI::SAWTOOTH;
+      return ASI::Wave::SAWTOOTH;
 
     if (s == "triangle")
-      return ASI::TRIANGLE;
+      return ASI::Wave::TRIANGLE;
 
     if (s == "noise")
-      return ASI::NOISE;
+      return ASI::Wave::NOISE;
 
     throw std::runtime_error("Unknown wave type");
+  }
+
+  ASI::Pass strToPass(const std::string & s)
+  {
+    if (s == "none")
+      return ASI::Pass::NONE;
+
+    if (s == "lowpass")
+      return ASI::Pass::LOWPASS;
+
+    if (s == "highpass")
+      return ASI::Pass::HIGHPASS;
+
+    if (s == "bandpass")
+      return ASI::Pass::BANDPASS;
+
+    if (s == "bandstop")
+      return ASI::Pass::BANDSTOP;
+
+    throw std::runtime_error("Unknown pass type");
   }
 
   void readHarmonics(const json & params, std::vector<ASI::Harmonic> & harmonics)
@@ -80,7 +100,7 @@ namespace ASI
     parameters->tremolo.amplitude = inParams["lfo"]["tremolo"]["amplitude"];
     readHarmonics(inParams["lfo"]["tremolo"]["harmonics"], parameters->tremolo.harmonics);
 
-    parameters->iir.pass = BANDPASS;
+    parameters->iir.pass = strToPass(inParams["filter"]["type"]);
     parameters->iir.order = inParams["filter"]["order"];
     parameters->iir.lower = inParams["filter"]["lower"];
     parameters->iir.upper = inParams["filter"]["upper"];
