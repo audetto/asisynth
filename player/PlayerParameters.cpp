@@ -60,7 +60,7 @@ namespace
   {
     for (const json & k : data)
     {
-      velocity.push_back(k[0]);
+      velocity.push_back(k);
     }
   }
 }
