@@ -143,10 +143,6 @@ namespace ASI
     }
   }
 
-  void ModeHandler::sampleRate(const jack_nframes_t nframes)
-  {
-  }
-
   void ModeHandler::shutdown()
   {
   }

@@ -294,10 +294,6 @@ namespace ASI
     }
   }
 
-  void ChordPlayerHandler::sampleRate(const jack_nframes_t nframes)
-  {
-  }
-
   void ChordPlayerHandler::shutdown()
   {
   }

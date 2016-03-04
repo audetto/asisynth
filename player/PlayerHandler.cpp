@@ -55,7 +55,11 @@ namespace ASI
       m_inputPort = jack_port_register(m_client, "player_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
       m_outputPort = jack_port_register (m_client, "player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
-      m_melody = loadPlayerMelody(melodyFile);
+      const std::shared_ptr<const Melody> melody = loadPlayerMelody(melodyFile);
+
+      processMelody(*melody, m_sampleRate, m_firstBeat, m_master);
+      // start in a "paused" position
+      m_position = m_master.size();
     }
 
     void PlayerHandler::process(const jack_nframes_t nframes)
@@ -107,13 +111,6 @@ namespace ASI
 
 	++m_position;
       }
-    }
-
-    void PlayerHandler::sampleRate(const jack_nframes_t nframes)
-    {
-      processMelody(*m_melody, nframes, m_firstBeat, m_master);
-      // start in a "paused" position
-      m_position = m_master.size();
     }
 
     void PlayerHandler::shutdown()

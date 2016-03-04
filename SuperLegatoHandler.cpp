@@ -10,12 +10,13 @@ namespace ASI
 {
 
   SuperLegatoHandler::SuperLegatoHandler(jack_client_t * client, const int delayMilliseconds)
-    : InputOutputHandler(client), m_delayMilliseconds(delayMilliseconds)
+    : InputOutputHandler(client)
   {
     m_inputPort = jack_port_register(m_client, "legato_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "legato_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
-    assert(m_delayMilliseconds >= 0);
+    assert(delayMilliseconds >= 0);
+    m_delayFrames = delayMilliseconds * m_sampleRate / 1000;
   }
 
   void SuperLegatoHandler::process(const jack_nframes_t nframes)
@@ -71,11 +72,6 @@ namespace ASI
     {
       m_queue.clear();
     }
-  }
-
-  void SuperLegatoHandler::sampleRate(const jack_nframes_t nframes)
-  {
-    m_delayFrames = m_delayMilliseconds * nframes / 1000;
   }
 
   void SuperLegatoHandler::shutdown()

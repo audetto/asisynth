@@ -56,20 +56,6 @@ namespace
     return 0;
   }
 
-  int sampleRate(jack_nframes_t nframes, void *arg)
-  {
-    ClientData & data = *reinterpret_cast<ClientData *>(arg);
-    Handlers_t & handlers = data.handlers;
-
-    for (auto & handler : handlers)
-    {
-      handler->sampleRate(nframes);
-    }
-
-    data.sr = nframes;
-    return 0;
-  }
-
   void shutdown(void *arg)
   {
     ClientData & data = *reinterpret_cast<ClientData *>(arg);
@@ -99,7 +85,7 @@ namespace
     std::cout << std::endl;
     std::cout << "Frames: " << data.frames << std::endl;
     std::cout << "Seconds: " << seconds << std::endl;
-    std::cout << "Jack: " << jack << std::endl;
+    std::cout << "Wall clock: " << jack << std::endl;
     std::cout << "Load: " << load * 100.0 << " %" << std::endl;
     std::cout << "Max load: " << maxLoad * 100.0 << " %" << std::endl;
   }
@@ -121,7 +107,7 @@ int main(int argc, char **args)
   data.alive = false;
   data.time = 0.0;
   data.frames = 0;
-  data.sr = 0;
+  data.sr = jack_get_sample_rate(client);
 
   if (!ASI::createHandlers(argc, args, client, handlers))
   {
@@ -136,8 +122,6 @@ int main(int argc, char **args)
   }
 
   jack_set_process_callback(client, process, &data);
-
-  jack_set_sample_rate_callback(client, sampleRate, &data);
 
   jack_on_shutdown(client, shutdown, &data);
 
@@ -158,6 +142,7 @@ int main(int argc, char **args)
   }
 
   // detach all ports
+  jack_deactivate(client);
   jack_client_close(client);
 
   printStatistics(data);

@@ -4,16 +4,14 @@
 #include "../MidiEvent.h"
 
 #include <jack/midiport.h>
-#include <memory>
 #include <vector>
+#include <string>
 
 namespace ASI
 {
 
   namespace Player
   {
-
-    struct Melody;
 
     /*
       This is like a midi player, with melody from a json file
@@ -26,15 +24,12 @@ namespace ASI
 
       virtual void process(const jack_nframes_t nframes);
 
-      virtual void sampleRate(const jack_nframes_t nframes);
-
       virtual void shutdown();
 
     private:
 
       const size_t m_firstBeat;
 
-      std::shared_ptr<const Melody> m_melody;
       std::vector<MidiEvent> m_master;
       size_t m_position;
       size_t m_startFrame;

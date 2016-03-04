@@ -20,13 +20,9 @@ namespace ASI
 
     virtual void process(const jack_nframes_t nframes);
 
-    virtual void sampleRate(const jack_nframes_t nframes);
-
     virtual void shutdown();
 
   private:
-
-    const int m_delayMilliseconds;
 
     jack_nframes_t m_delayFrames;
 

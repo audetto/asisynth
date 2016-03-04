@@ -144,6 +144,13 @@ namespace ASI
       // so we do not allocate during "process callback"
       m_work.buffer.resize(8192);
       m_work.vibratoBuffer.resize(8192);
+
+      m_work.attackDelta = m_parameters->adsr.peak / m_parameters->adsr.attackTime / m_sampleRate;
+      m_work.decayDelta = (m_parameters->adsr.peak - 1.0) / m_parameters->adsr.decayTime / m_sampleRate;
+      m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / m_sampleRate;
+      m_work.releaseDelta = 1.0 / m_parameters->adsr.releaseTime / m_sampleRate;
+      m_work.actualReleaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
+      m_work.timeMultiplier = 1.0 / m_sampleRate;
     }
 
     void SynthesiserHandler::processMIDIEvent(const jack_nframes_t eventCount, const jack_nframes_t localTime, const jack_nframes_t absTime, void * portBuf, jack_nframes_t & eventIndex, jack_midi_event_t & event)
@@ -375,17 +382,6 @@ namespace ASI
       }
 
       m_work.filter.process(output, nframes);
-    }
-
-    void SynthesiserHandler::sampleRate(const jack_nframes_t nframes)
-    {
-      m_work.attackDelta = m_parameters->adsr.peak / m_parameters->adsr.attackTime / nframes;
-      m_work.decayDelta = (m_parameters->adsr.peak - 1.0) / m_parameters->adsr.decayTime / nframes;
-      m_work.sustainDelta = 1.0 / m_parameters->adsr.sustainTime / nframes;
-      m_work.releaseDelta = 1.0 / m_parameters->adsr.releaseTime / nframes;
-      m_work.actualReleaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
-      m_work.timeMultiplier = 1.0 / nframes;
-      m_work.sampleRate = nframes;
     }
 
     void SynthesiserHandler::shutdown()

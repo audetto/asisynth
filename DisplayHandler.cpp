@@ -101,10 +101,6 @@ namespace ASI
 
   }
 
-  void DisplayHandler::sampleRate(const jack_nframes_t nframes)
-  {
-  }
-
   void DisplayHandler::shutdown()
   {
   }

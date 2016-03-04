@@ -26,6 +26,8 @@ namespace ASI
 
     bool m_active;
 
+    const jack_nframes_t m_sampleRate;
+
   private:
     std::vector<int> m_notes;
 
