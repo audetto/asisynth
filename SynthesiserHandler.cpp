@@ -286,13 +286,16 @@ namespace ASI
       // is it needed?
       note.amplitude = (note.amplitude * m_parameters->adsr.averageSize + note.current) / (m_parameters->adsr.averageSize + 1.0);
 
-      const Real_t deltaPhase = note.frequency * m_work.timeMultiplier * m_work.vibratoBuffer[i];
-
-      const Real_t x = note.phase + deltaPhase;
-      const Real_t w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, x);
+      const Real_t w = interpolateSample(m_work.interpolationMultiplier, m_work.samples, note.phase);
       const Real_t value = w * note.amplitude * note.volume;
       m_work.buffer[i] = value;
-      note.phase = x;
+
+      const Real_t deltaPhase = note.frequency * m_work.timeMultiplier * m_work.vibratoBuffer[i];
+      note.phase = note.phase + deltaPhase;
+      if (note.phase >= 1.0)
+      {
+	note.phase -= 1.0;
+      }
     }
 
     note.filter.process(m_work.buffer.data(), nframes);
