@@ -3,7 +3,7 @@
 #include "SuperLegatoHandler.h"
 #include "ChordPlayerHandler.h"
 #include "DisplayHandler.h"
-#include "SynthesiserHandler.h"
+#include "synth/SynthesiserHandler.h"
 #include "player/PlayerHandler.h"
 
 #include <boost/program_options.hpp>
@@ -116,7 +116,7 @@ namespace ASI
       if (vm.count("synth"))
       {
 	const std::string parametersFile = vm["synth:params"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::SynthesiserHandler>(client, parametersFile));
+	handlers.push_back(std::make_shared<ASI::Synth::SynthesiserHandler>(client, parametersFile));
       }
 
       if (vm.count("player"))

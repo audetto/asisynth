@@ -9,15 +9,15 @@ add_executable(asisynth
   EchoHandler.cpp
   Factory.cpp
   I_JackHandler.cpp
-  IIRFactory.cpp
   InputOutputHandler
   MidiEvent.cpp
   MidiPassThrough.cpp
   MidiUtils.cpp
   ModeHandler.cpp
   SuperLegatoHandler.cpp
-  SynthesiserHandler.cpp
-  SynthParameters.cpp
+  synth/IIRFactory.cpp
+  synth/SynthesiserHandler.cpp
+  synth/SynthParameters.cpp
   player/PlayerParameters.cpp
   player/PlayerHandler.cpp
   )
