@@ -382,11 +382,6 @@ namespace ASI
     m_work.actualReleaseDelta = m_work.sustain ? m_work.sustainDelta : m_work.releaseDelta;
     m_work.timeMultiplier = 1.0 / nframes;
     m_work.sampleRate = nframes;
-
-    for (size_t i = 0; i < 10; ++i)
-    {
-      noteOn(0, 50 + i, 100);
-    }
   }
 
   void SynthesiserHandler::shutdown()
