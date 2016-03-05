@@ -5,6 +5,7 @@
 #include "DisplayHandler.h"
 #include "synth/SynthesiserHandler.h"
 #include "player/PlayerHandler.h"
+#include "transport/TransportHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>
@@ -68,6 +69,11 @@ namespace ASI
       ("player:first", po::value<size_t>()->default_value(0), "First beat");
     desc.add(playerDesc);
 
+    po::options_description transportDesc("Transport");
+    transportDesc.add_options()
+      ("trans", "Transport");
+    desc.add(transportDesc);
+
     po::variables_map vm;
     try
     {
@@ -125,6 +131,11 @@ namespace ASI
 	const std::string melodyFile = vm["player:melody"].as<std::string>();
 	const size_t firstBeat = vm["player:first"].as<size_t>();
 	handlers.push_back(std::make_shared<ASI::Player::PlayerHandler>(client, melodyFile, firstBeat));
+      }
+
+      if (vm.count("trans"))
+      {
+	handlers.push_back(std::make_shared<ASI::Transport::TransportHandler>(client));
       }
     }
     catch (const po::error& e)

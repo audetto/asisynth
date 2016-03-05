@@ -20,6 +20,7 @@ add_executable(asisynth
   synth/SynthParameters.cpp
   player/PlayerParameters.cpp
   player/PlayerHandler.cpp
+  transport/TransportHandler.cpp
   )
 
 add_library(sigproc
