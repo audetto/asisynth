@@ -30,9 +30,10 @@ namespace ASI
 
       const size_t m_firstBeat;
 
+      jack_transport_state_t m_previousState;
+
       std::vector<MidiEvent> m_master;
       size_t m_position;
-      size_t m_startFrame;
     };
 
   }

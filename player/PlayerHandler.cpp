@@ -52,65 +52,62 @@ namespace ASI
     PlayerHandler::PlayerHandler(jack_client_t * client, const std::string & melodyFile, const size_t firstBeat)
       : InputOutputHandler(client), m_firstBeat(firstBeat)
     {
-      m_inputPort = jack_port_register(m_client, "player_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
       m_outputPort = jack_port_register (m_client, "player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
       const std::shared_ptr<const Melody> melody = loadPlayerMelody(melodyFile);
 
       processMelody(*melody, m_sampleRate, m_firstBeat, m_master);
-      // start in a "paused" position
-      m_position = m_master.size();
+      m_position = 0;
+      m_previousState = JackTransportStopped;
     }
 
     void PlayerHandler::process(const jack_nframes_t nframes)
     {
-      void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
       void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
       jack_midi_clear_buffer(outPortBuf);
 
-      jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
+      jack_position_t pos;
+      const jack_transport_state_t state = jack_transport_query(m_client, &pos);
 
-      jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
-
-      for (size_t i = 0; i < eventCount; ++i)
+      switch (state)
       {
-	jack_midi_event_t inEvent;
-	jack_midi_event_get(&inEvent, inPortBuf, i);
-
-	bool newActive = m_active;
-	filtered(inEvent, newActive);
-
-	if (newActive != m_active)
+      case JackTransportStopped:
 	{
-	  // it has changed
-	  if (newActive)
+	  if (m_previousState != state)
 	  {
-	    // it has just been activated
-	    m_startFrame = framesAtStart + inEvent.time;
+	    // stop them all now
+	    allNotesOff(outPortBuf, 0);
+	    // reset position
 	    m_position = 0;
 	  }
-	  else
+	  break;
+	}
+      case JackTransportRolling:
+	{
+	  const jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
+	  const jack_nframes_t lastFrame = framesAtStart + nframes;
+
+	  const jack_nframes_t startFrame = framesAtStart - pos.frame;
+
+	  while (m_position < m_master.size() && startFrame + m_master[m_position].m_time >= framesAtStart && startFrame + m_master[m_position].m_time < lastFrame)
 	  {
-	    // stop everything
-	    allNotesOff(outPortBuf, inEvent.time);
-	    m_position = m_master.size();
+	    const MidiEvent & event = m_master[m_position];
+	    const jack_nframes_t newOffset = event.m_time - pos.frame;
+	    jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
+	    noteChange(event.m_data);
+
+	    ++m_position;
 	  }
-	  m_active = newActive;
+	  break;
+	}
+      default:
+	{
+	  break;
 	}
       }
 
-      const jack_nframes_t lastFrame = framesAtStart + nframes;
-
-      while (m_position < m_master.size() && m_startFrame + m_master[m_position].m_time >= framesAtStart && m_startFrame + m_master[m_position].m_time < lastFrame)
-      {
-	const MidiEvent & event = m_master[m_position];
-	const jack_nframes_t newOffset = m_startFrame + event.m_time - framesAtStart;
-	jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
-	noteChange(event.m_data);
-
-	++m_position;
-      }
+      m_previousState = state;
     }
 
     void PlayerHandler::shutdown()
