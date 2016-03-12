@@ -202,6 +202,7 @@ namespace ASI
     // this is for debugging only
     if (false) printChords(m_chords);
 
+    m_next = 0;
     reset();
   }
 
