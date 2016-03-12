@@ -26,29 +26,29 @@ namespace ASI
 
     jack_midi_clear_buffer(outPortBuf);
 
-    if (!m_active)
-    {
-      return midiPassThrough(inPortBuf, outPortBuf, nframes, m_active);
-    }
+    const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
 
-    jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
+    const jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
-    jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
+    const jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
 
-    for(size_t i = 0; i < eventCount; ++i)
+    for (size_t i = 0; i < eventCount; ++i)
     {
       jack_midi_event_t inEvent;
       jack_midi_event_get(&inEvent, inPortBuf, i);
 
-      if (filtered(inEvent, m_active))
-      {
-	continue;
-      }
-
       const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
+      const jack_midi_data_t velocity = inEvent.buffer[2];
 
       // NOTEOFF is delayed to achieve extra legato effect
-      const jack_nframes_t delay = (cmd == MIDI_NOTEOFF) ? m_delayFrames : 0;
+      jack_nframes_t delay = 0;
+      if (state == JackTransportRolling)
+      {
+	if (cmd == MIDI_NOTEOFF || (cmd == MIDI_NOTEON && velocity == 0))
+	{
+	  delay = m_delayFrames;
+	}
+      }
 
       const jack_nframes_t newTime = framesAtStart + inEvent.time + delay;
 
@@ -66,11 +66,6 @@ namespace ASI
       const jack_nframes_t newOffset = event.m_time - framesAtStart;
       jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
       m_queue.erase(it);
-    }
-
-    if (!m_active)
-    {
-      m_queue.clear();
     }
   }
 
