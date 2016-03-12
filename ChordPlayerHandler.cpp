@@ -38,8 +38,13 @@ namespace
     std::regex e("^([CDEFGAB])(#|##|b|bb)?([0-8])$");
     std::smatch m;
 
-    assert(std::regex_search(s, m, e));
-    assert(m.size() == 4);
+    const bool ok = std::regex_search(s, m, e) && (m.size() == 4);
+
+    if (!ok)
+    {
+      const std::string message = "Failed to parse: " + s;
+      throw std::runtime_error(message);
+    }
 
     const std::string note = m[1].str();
     const std::string alt = m[2].str();
@@ -70,8 +75,13 @@ namespace
 
     const int root = 48; // for the chords
 
-    assert(std::regex_search(s, m, e));
-    assert(m.size() == 6);
+    const bool ok = std::regex_search(s, m, e) && (m.size() == 6);
+
+    if (!ok)
+    {
+      const std::string message = "Failed to parse: " + s;
+      throw std::runtime_error(message);
+    }
 
     const std::string note1 = m[1].str();
     const std::string alt1 = m[2].str();
