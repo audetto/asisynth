@@ -35,6 +35,8 @@ namespace ASI
     const std::string m_filename;
     const int m_velocity;
 
+    jack_transport_state_t m_previousState;
+
     std::vector<ChordData> m_chords;
 
     size_t m_next;

@@ -170,17 +170,13 @@ namespace
   {
     const std::vector<jack_midi_data_t> & notes = data.notes;
 
-    // stay on the same channel
-    const int inputChannel = event.buffer[0] & 0xf;
-    const jack_midi_data_t actualCommand = cmd | inputChannel;
-
     const jack_midi_data_t inputVelocity = event.buffer[2];
     const jack_midi_data_t actualVelocity = velocity == 0 ? inputVelocity : velocity & 0x7f;
 
     for (auto n : notes)
     {
       jack_midi_data_t data[3];
-      data[0] = actualCommand;
+      data[0] = cmd;
       data[1] = n;
       data[2] = actualVelocity;
 
@@ -198,6 +194,8 @@ namespace ASI
   {
     m_inputPort = jack_port_register(m_client, "chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     m_outputPort = jack_port_register (m_client, "chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+
+    m_previousState = JackTransportStopped;
 
     populateChords(m_filename, m_chords);
 
@@ -242,56 +240,73 @@ namespace ASI
 
     jack_midi_clear_buffer(outPortBuf);
 
-    jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
+    const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
 
-    for(size_t i = 0; i < eventCount; ++i)
+    switch (state)
     {
-      jack_midi_event_t inEvent;
-      jack_midi_event_get(&inEvent, inPortBuf, i);
-
-      // if we press middle pedal, stop execution and reset pointers
-      if (filtered(inEvent, m_active))
+    case JackTransportStopped:
       {
-	// cancel the last chord played
-	execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
-	// reset pointers
-	reset();
-      }
-
-      if (m_next == m_chords.size())
-      {
+	if (m_previousState != state)
+	{
+	  // make up a reference event
+	  jack_midi_event_t inEvent;
+	  inEvent.buffer[2] = 80; // velocity
+	  inEvent.time = 0; // immediately
+	  // cancel the last chord played
+	  execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
+	  // reset pointers
+	  reset();
+	}
 	break;
       }
-
-      if (m_active)
+    case JackTransportRolling:
       {
-	const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
+	jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
-	if (cmd == MIDI_NOTEON)
+	for (size_t i = 0; i < eventCount; ++i)
 	{
-	  const jack_midi_data_t velocity = inEvent.buffer[2];
+	  jack_midi_event_t inEvent;
+	  jack_midi_event_get(&inEvent, inPortBuf, i);
 
-	  // MuseScore sends velocity = 0 rather than NOTEOFF
-	  if (velocity > 0)
+	  if (m_next == m_chords.size())
 	  {
-	    const jack_midi_data_t note = inEvent.buffer[1];
+	    break;
+	  }
 
-	    const ChordData & next = m_chords[m_next];
-	    if (note == next.trigger)
+	  const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
+
+	  if (cmd == MIDI_NOTEON)
+	  {
+	    const jack_midi_data_t velocity = inEvent.buffer[2];
+
+	    // MuseScore sends velocity = 0 rather than NOTEOFF
+	    if (velocity > 0)
 	    {
-	      if (!next.skip)
+	      const jack_midi_data_t note = inEvent.buffer[1];
+
+	      const ChordData & next = m_chords[m_next];
+	      if (note == next.trigger)
 	      {
-		execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
-		execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
-		m_previous = m_next;
+		if (!next.skip)
+		{
+		  execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
+		  execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
+		  m_previous = m_next;
+		}
+		setNext(m_next + 1);
 	      }
-	      setNext(m_next + 1);
 	    }
 	  }
 	}
+	break;
       }
-
+    default:
+      {
+	break;
+      }
     }
+
+    m_previousState = state;
   }
 
   void ChordPlayerHandler::shutdown()
