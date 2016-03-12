@@ -250,7 +250,11 @@ namespace ASI
 	if (m_previousState != state)
 	{
 	  // make up a reference event
+	  // populating only what is needed by execute()
 	  jack_midi_event_t inEvent;
+	  jack_midi_data_t data[3];
+	  inEvent.buffer = data;
+	  inEvent.size = sizeof(data);
 	  inEvent.buffer[2] = 80; // velocity
 	  inEvent.time = 0; // immediately
 	  // cancel the last chord played
