@@ -12,7 +12,4 @@ namespace ASI
   // when the pedal is pressed, active = false
   bool filtered(const jack_midi_event_t & event, bool & active);
 
-  // execute the passthrough and update the active flag (i.e. it switches it off in case);
-  void midiPassThrough(void* inPortBuf, void* outPortBuf, const jack_nframes_t nframes, bool & active);
-
 }

@@ -5,7 +5,7 @@ namespace ASI
 {
 
   InputOutputHandler::InputOutputHandler(jack_client_t * client)
-    : m_client(client), m_inputPort(nullptr), m_outputPort(nullptr), m_active(true)
+    : m_client(client), m_inputPort(nullptr), m_outputPort(nullptr)
     , m_sampleRate(jack_get_sample_rate(m_client)), m_notes(127, 0)
   {
   }

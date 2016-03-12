@@ -19,6 +19,10 @@ namespace ASI
       virtual void process(const jack_nframes_t nframes);
 
       virtual void shutdown();
+
+    private:
+
+      bool m_active;
     };
 
   }

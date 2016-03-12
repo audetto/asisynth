@@ -24,8 +24,6 @@ namespace ASI
     jack_port_t *m_inputPort;
     jack_port_t *m_outputPort;
 
-    bool m_active;
-
     const jack_nframes_t m_sampleRate;
 
   private:

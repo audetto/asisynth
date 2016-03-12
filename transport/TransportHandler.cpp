@@ -9,7 +9,7 @@ namespace ASI
   namespace Transport
   {
     TransportHandler::TransportHandler(jack_client_t * client)
-      : InputOutputHandler(client)
+      : InputOutputHandler(client), m_active(true)
     {
       m_inputPort = jack_port_register(m_client, "transport_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     }

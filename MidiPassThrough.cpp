@@ -29,23 +29,4 @@ namespace ASI
     }
   }
 
-  void midiPassThrough(void* inPortBuf, void* outPortBuf, const jack_nframes_t nframes, bool & active)
-  {
-    const jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
-
-    for(size_t i = 0; i < eventCount; ++i)
-    {
-      jack_midi_event_t inEvent;
-      jack_midi_event_get(&inEvent, inPortBuf, i);
-
-      const bool flt = filtered(inEvent, active);
-
-      if (!flt)
-      {
-	// just forward everything else
-	jack_midi_event_write(outPortBuf, inEvent.time, inEvent.buffer, inEvent.size);
-      }
-    }
-  }
-
 }
