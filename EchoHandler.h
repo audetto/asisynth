@@ -29,6 +29,7 @@ namespace ASI
 
     jack_nframes_t m_lagFrames;
 
+    jack_transport_state_t m_previousState;
     std::list<MidiEvent> m_queue;
 
   };

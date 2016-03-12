@@ -45,59 +45,68 @@ namespace ASI
 
     jack_midi_clear_buffer(outPortBuf);
 
-    if (!m_active)
+    const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
+
+    switch(state)
     {
-      return midiPassThrough(inPortBuf, outPortBuf, nframes, m_active);
-    }
-
-    jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
-
-    jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
-
-    for(size_t i = 0; i < eventCount; ++i)
-    {
-      jack_midi_event_t inEvent;
-      jack_midi_event_get(&inEvent, inPortBuf, i);
-
-      if (filtered(inEvent, m_active))
+    case JackTransportStopped:
       {
-	continue;
-      }
-
-      const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
-
-      switch (cmd)
-      {
-      case MIDI_NOTEON:
-      case MIDI_NOTEOFF:
+	if (m_previousState != state)
 	{
-	  const jack_nframes_t newTime = framesAtStart + inEvent.time + m_lagFrames;
-
-	  m_queue.push_back(createNewMidiEvent(newTime, inEvent, m_transposition, m_velocityRatio));
-
-	  break;
+	  // stop them all now
+	  allNotesOff(outPortBuf, 0);
+	  m_queue.clear();
 	}
+	break;
       }
-    }
+    case JackTransportRolling:
+      {
+	const jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
-    const jack_nframes_t lastFrame = framesAtStart + nframes;
+	const jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
 
-    while (!m_queue.empty() && m_queue.front().m_time >= framesAtStart && m_queue.front().m_time < lastFrame)
-    {
-      const MidiEvent & event = m_queue.front();
-      const jack_nframes_t newOffset = event.m_time - framesAtStart;
-      jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
-      m_queue.pop_front();
-    }
+	for (size_t i = 0; i < eventCount; ++i)
+	{
+	  jack_midi_event_t inEvent;
+	  jack_midi_event_get(&inEvent, inPortBuf, i);
 
-    if (!m_active)
-    {
-      m_queue.clear();
+	  const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
+
+	  switch (cmd)
+	  {
+	  case MIDI_NOTEON:
+	  case MIDI_NOTEOFF:
+	    {
+	      const jack_nframes_t newTime = framesAtStart + inEvent.time + m_lagFrames;
+
+	      m_queue.push_back(createNewMidiEvent(newTime, inEvent, m_transposition, m_velocityRatio));
+
+	      break;
+	    }
+	  }
+	}
+
+	const jack_nframes_t lastFrame = framesAtStart + nframes;
+
+	while (!m_queue.empty() && m_queue.front().m_time >= framesAtStart && m_queue.front().m_time < lastFrame)
+	{
+	  const MidiEvent & event = m_queue.front();
+	  const jack_nframes_t newOffset = event.m_time - framesAtStart;
+	  jack_midi_event_write(outPortBuf, newOffset, event.m_data, event.m_size);
+	  noteChange(event.m_data);
+	  m_queue.pop_front();
+	}
+	break;
+      }
+    default:
+      {
+	break;
+      }
+
     }
   }
 
   void EchoHandler::shutdown()
   {
   }
-
 }
