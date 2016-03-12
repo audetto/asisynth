@@ -34,6 +34,8 @@ namespace ASI
 
     int m_quirkOffset;
 
+    std::vector<int> m_mappedNotes; // -1 not mapped, -2 silence, > 0 mapped
+
   };
 
 }
