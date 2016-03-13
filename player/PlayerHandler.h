@@ -20,7 +20,7 @@ namespace ASI
     {
     public:
 
-      PlayerHandler(jack_client_t * client, const std::string & melodyFile, const size_t firstBeat);
+      PlayerHandler(jack_client_t * client, const std::string & filename, const size_t firstBeat);
 
       virtual void process(const jack_nframes_t nframes);
 

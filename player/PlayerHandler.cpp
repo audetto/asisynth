@@ -49,12 +49,12 @@ namespace ASI
   namespace Player
   {
 
-    PlayerHandler::PlayerHandler(jack_client_t * client, const std::string & melodyFile, const size_t firstBeat)
+    PlayerHandler::PlayerHandler(jack_client_t * client, const std::string & filename, const size_t firstBeat)
       : InputOutputHandler(client), m_firstBeat(firstBeat)
     {
       m_outputPort = jack_port_register (m_client, "player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
-      const std::shared_ptr<const Melody> melody = loadPlayerMelody(melodyFile);
+      const std::shared_ptr<const Melody> melody = loadPlayerMelody(filename);
 
       processMelody(*melody, m_sampleRate, m_firstBeat, m_master);
       m_position = 0;
