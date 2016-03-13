@@ -65,7 +65,7 @@ namespace ASI
     po::options_description playerDesc("Player");
     playerDesc.add_options()
       ("player", "Player")
-      ("player:filename", po::value<std::string>(), "Melody (json)")
+      ("player:file", po::value<std::string>(), "Melody (json)")
       ("player:first", po::value<size_t>()->default_value(0), "First beat");
     desc.add(playerDesc);
 
@@ -128,7 +128,7 @@ namespace ASI
 
       if (vm.count("player"))
       {
-	const std::string filename = vm["player:filename"].as<std::string>();
+	const std::string filename = vm["player:file"].as<std::string>();
 	const size_t firstBeat = vm["player:first"].as<size_t>();
 	handlers.push_back(std::make_shared<ASI::Player::PlayerHandler>(client, filename, firstBeat));
       }
