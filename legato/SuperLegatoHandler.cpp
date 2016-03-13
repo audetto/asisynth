@@ -2,7 +2,6 @@
 #include "../MidiCommands.h"
 
 #include <cstdlib>
-#include <cassert>
 #include <memory>
 
 namespace ASI
@@ -16,7 +15,12 @@ namespace ASI
       m_inputPort = jack_port_register(m_client, "legato_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
       m_outputPort = jack_port_register (m_client, "legato_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
-      assert(delayMilliseconds >= 0);
+      if (delayMilliseconds < 0)
+      {
+	const std::string message = "Legato delay must be positive";
+	throw std::runtime_error(message);
+      }
+
       m_delayFrames = delayMilliseconds * m_sampleRate / 1000;
     }
 

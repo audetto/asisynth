@@ -2,7 +2,7 @@
 #include "../MidiCommands.h"
 
 #include <cstdlib>
-#include <cassert>
+#include <stdexcept>
 
 namespace
 {
@@ -70,7 +70,8 @@ namespace ASI
       }
       else
       {
-	assert(false);
+	const std::string message = "Invalid target: " + target;
+	throw std::runtime_error(message);
       }
 
       if (quirk == "below")
@@ -87,7 +88,8 @@ namespace ASI
       }
       else
       {
-	assert(false);
+	const std::string message = "Invalid quirk: " + quirk;
+	throw std::runtime_error(message);
       }
 
       m_mappedNotes.resize(128, -1);

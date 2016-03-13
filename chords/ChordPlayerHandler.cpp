@@ -131,7 +131,11 @@ namespace
       std::vector<std::string> tokens;
       boost::split(tokens, line, boost::is_any_of(","));
 
-      assert(!tokens.empty());
+      if (tokens.empty())
+      {
+	const std::string message = "Failed to parse: " + line;
+	throw std::runtime_error(message);
+      }
 
       ASI::Chords::ChordPlayerHandler::ChordData data;
       data.skip = false;
