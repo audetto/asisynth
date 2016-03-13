@@ -1,7 +1,6 @@
 #include "PlayerHandler.h"
 #include "PlayerParameters.h"
 #include "../MidiCommands.h"
-#include "../MidiPassThrough.h"
 
 #include <algorithm>
 

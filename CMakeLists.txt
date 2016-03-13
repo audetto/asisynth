@@ -9,7 +9,6 @@ add_executable(asisynth
   I_JackHandler.cpp
   InputOutputHandler
   MidiEvent.cpp
-  MidiPassThrough.cpp
   MidiUtils.cpp
   chords/ChordPlayerHandler.cpp
   echo/EchoHandler.cpp

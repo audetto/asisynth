@@ -1,5 +1,5 @@
 #include "TransportHandler.h"
-#include "../MidiPassThrough.h"
+#include "../MidiCommands.h"
 
 #include <cstring>
 
@@ -9,7 +9,7 @@ namespace ASI
   namespace Transport
   {
     TransportHandler::TransportHandler(jack_client_t * client)
-      : InputOutputHandler(client), m_active(true)
+      : InputOutputHandler(client), m_pedalDown(false)
     {
       m_inputPort = jack_port_register(m_client, "transport_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
     }
@@ -25,29 +25,39 @@ namespace ASI
 	jack_midi_event_t inEvent;
 	jack_midi_event_get(&inEvent, inPortBuf, i);
 
-	bool newActive = m_active;
-	filtered(inEvent, newActive);
+	const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
 
-	if (newActive != m_active)
+	if (cmd == MIDI_CC)
 	{
-	  // it has changed
-	  if (newActive)
+	  const jack_midi_data_t control = inEvent.buffer[1];
+	  if (control == MIDI_CC_SOSTENUTO)
 	  {
-	    // it has just been activated
-	    jack_transport_start(m_client);
+	    const jack_midi_data_t value = inEvent.buffer[2];
+
+	    const bool newPedalDown = value >= 64;
+	    if (newPedalDown != m_pedalDown)
+	    {
+	      // it has changed
+	      if (newPedalDown)
+	      {
+		// stop everything, and restart at zero for now
+		jack_transport_stop(m_client);
+		jack_position_t pos;
+		memset(&pos, 0, sizeof(pos));
+		pos.frame = 0;
+		jack_transport_reposition(m_client, &pos);
+	      }
+	      else
+	      {
+		// it has just been activated
+		jack_transport_start(m_client);
+	      }
+	      m_pedalDown = newPedalDown;
+	    }
 	  }
-	  else
-	  {
-	    // stop everything, and restart at zero for now
-	    jack_transport_stop(m_client);
-	    jack_position_t pos;
-	    memset(&pos, 0, sizeof(pos));
-	    pos.frame = 0;
-	    jack_transport_reposition(m_client, &pos);
-	  }
-	  m_active = newActive;
 	}
       }
+
     }
 
     void TransportHandler::shutdown()

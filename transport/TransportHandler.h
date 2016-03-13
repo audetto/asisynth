@@ -22,7 +22,7 @@ namespace ASI
 
     private:
 
-      bool m_active;
+      bool m_pedalDown;
     };
 
   }
