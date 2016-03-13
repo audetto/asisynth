@@ -1,7 +1,7 @@
-#include "EchoHandler.h"
-#include "ModeHandler.h"
-#include "SuperLegatoHandler.h"
-#include "ChordPlayerHandler.h"
+#include "echo/EchoHandler.h"
+#include "mode/ModeHandler.h"
+#include "legato/SuperLegatoHandler.h"
+#include "chords/ChordPlayerHandler.h"
 #include "DisplayHandler.h"
 #include "synth/SynthesiserHandler.h"
 #include "player/PlayerHandler.h"
@@ -90,7 +90,7 @@ namespace ASI
 	const double lag = vm["echo:delay"].as<double>();
 	const int transposition = vm["echo:transposition"].as<int>();
 	const double velocity = vm["echo:velocity"].as<double>();
-	handlers.push_back(std::make_shared<ASI::EchoHandler>(client, lag, transposition, velocity));
+	handlers.push_back(std::make_shared<ASI::Echo::EchoHandler>(client, lag, transposition, velocity));
       }
 
       if (vm.count("mode"))
@@ -98,20 +98,20 @@ namespace ASI
 	const int offset = vm["mode:offset"].as<int>();
 	const std::string target = vm["mode:target"].as<std::string>();
 	const std::string quirk = vm["mode:quirk"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::ModeHandler>(client, offset, target, quirk));
+	handlers.push_back(std::make_shared<ASI::Mode::ModeHandler>(client, offset, target, quirk));
       }
 
       if (vm.count("legato"))
       {
 	const int delay = vm["legato:delay"].as<int>();
-	handlers.push_back(std::make_shared<ASI::SuperLegatoHandler>(client, delay));
+	handlers.push_back(std::make_shared<ASI::Legato::SuperLegatoHandler>(client, delay));
       }
 
       if (vm.count("chords"))
       {
 	const std::string filename = vm["chords:file"].as<std::string>();
 	const int velocity = vm["chords:velocity"].as<int>();
-	handlers.push_back(std::make_shared<ASI::ChordPlayerHandler>(client, filename, velocity));
+	handlers.push_back(std::make_shared<ASI::Chords::ChordPlayerHandler>(client, filename, velocity));
       }
 
       if (vm.count("display"))

@@ -4,17 +4,17 @@ project(asisynth)
 
 add_executable(asisynth
   AsiSynth.cpp
-  ChordPlayerHandler.cpp
   DisplayHandler.cpp
-  EchoHandler.cpp
   Factory.cpp
   I_JackHandler.cpp
   InputOutputHandler
   MidiEvent.cpp
   MidiPassThrough.cpp
   MidiUtils.cpp
-  ModeHandler.cpp
-  SuperLegatoHandler.cpp
+  chords/ChordPlayerHandler.cpp
+  echo/EchoHandler.cpp
+  legato/SuperLegatoHandler.cpp
+  mode/ModeHandler.cpp
   synth/IIRFactory.cpp
   synth/SynthesiserHandler.cpp
   synth/SynthParameters.cpp

@@ -1,7 +1,6 @@
 #include "ChordPlayerHandler.h"
-#include "MidiCommands.h"
-#include "MidiPassThrough.h"
-#include "MidiUtils.h"
+#include "../MidiCommands.h"
+#include "../MidiUtils.h"
 
 #include <fstream>
 #include <iostream>
@@ -105,14 +104,14 @@ namespace
     }
   }
 
-  void populateChords(const std::string & filename, std::vector<ASI::ChordPlayerHandler::ChordData> & chords)
+  void populateChords(const std::string & filename, std::vector<ASI::Chords::ChordPlayerHandler::ChordData> & chords)
   {
     std::ifstream in(filename);
 
     chords.clear();
 
     {
-      ASI::ChordPlayerHandler::ChordData data;
+      ASI::Chords::ChordPlayerHandler::ChordData data;
       data.skip = false;
       data.trigger = -1;
 
@@ -134,7 +133,7 @@ namespace
 
       assert(!tokens.empty());
 
-      ASI::ChordPlayerHandler::ChordData data;
+      ASI::Chords::ChordPlayerHandler::ChordData data;
       data.skip = false;
       data.trigger = getNoteAndOctave(tokens[0]);
 
@@ -156,7 +155,7 @@ namespace
     }
   }
 
-  void printChords(const std::vector<ASI::ChordPlayerHandler::ChordData> & chords)
+  void printChords(const std::vector<ASI::Chords::ChordPlayerHandler::ChordData> & chords)
   {
     for (const auto & chord : chords)
     {
@@ -176,7 +175,7 @@ namespace
     }
   }
 
-  void execute(void * buffer, const int velocity, const jack_midi_event_t & event, const ASI::ChordPlayerHandler::ChordData & data, const jack_midi_data_t cmd)
+  void execute(void * buffer, const int velocity, const jack_midi_event_t & event, const ASI::Chords::ChordPlayerHandler::ChordData & data, const jack_midi_data_t cmd)
   {
     const std::vector<jack_midi_data_t> & notes = data.notes;
 
@@ -198,134 +197,137 @@ namespace
 
 namespace ASI
 {
-
-  ChordPlayerHandler::ChordPlayerHandler(jack_client_t * client, const std::string & filename, const int velocity)
-    : InputOutputHandler(client), m_filename(filename), m_velocity(velocity)
+  namespace Chords
   {
-    m_inputPort = jack_port_register(m_client, "chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-    m_outputPort = jack_port_register (m_client, "chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
-    m_previousState = JackTransportStopped;
-
-    populateChords(m_filename, m_chords);
-
-    // this is for debugging only
-    if (false) printChords(m_chords);
-
-    m_next = 0;
-    reset();
-  }
-
-  void ChordPlayerHandler::setNext(const size_t next)
-  {
-    if (m_next != next)
+    ChordPlayerHandler::ChordPlayerHandler(jack_client_t * client, const std::string & filename, const int velocity)
+      : InputOutputHandler(client), m_filename(filename), m_velocity(velocity)
     {
-      m_next = next;
+      m_inputPort = jack_port_register(m_client, "chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
+      m_outputPort = jack_port_register (m_client, "chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
-      if (m_next != m_chords.size())
-      {
-	const ChordData & next = m_chords[m_next];
-	std::cout << "Waiting for [" << m_next << "]: ";
-	streamNoteName(std::cout, next.trigger, BEST);
+      m_previousState = JackTransportStopped;
 
-	// write some more " " to clear longer lines followed by shorter ones
-	std::cout << " (" << (int)next.trigger << ")           \r" << std::flush;
-      }
-      else
+      populateChords(m_filename, m_chords);
+
+      // this is for debugging only
+      if (false) printChords(m_chords);
+
+      m_next = 0;
+      reset();
+    }
+
+    void ChordPlayerHandler::setNext(const size_t next)
+    {
+      if (m_next != next)
       {
-	std::cout << "DONE. Press sostenuto pedal to restart" << std::endl;
+	m_next = next;
+
+	if (m_next != m_chords.size())
+	{
+	  const ChordData & next = m_chords[m_next];
+	  std::cout << "Waiting for [" << m_next << "]: ";
+	  streamNoteName(std::cout, next.trigger, BEST);
+
+	  // write some more " " to clear longer lines followed by shorter ones
+	  std::cout << " (" << (int)next.trigger << ")           \r" << std::flush;
+	}
+	else
+	{
+	  std::cout << "DONE. Press sostenuto pedal to restart" << std::endl;
+	}
       }
     }
-  }
 
-  void ChordPlayerHandler::reset()
-  {
-    m_previous = 0;
-    setNext(1);
-  }
-
-  void ChordPlayerHandler::process(const jack_nframes_t nframes)
-  {
-    void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
-    void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
-
-    jack_midi_clear_buffer(outPortBuf);
-
-    const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
-
-    switch (state)
+    void ChordPlayerHandler::reset()
     {
-    case JackTransportStopped:
-      {
-	if (m_previousState != state)
-	{
-	  // make up a reference event
-	  // populating only what is needed by execute()
-	  jack_midi_event_t inEvent;
-	  jack_midi_data_t data[3];
-	  inEvent.buffer = data;
-	  inEvent.size = sizeof(data);
-	  inEvent.buffer[2] = 80; // velocity
-	  inEvent.time = 0; // immediately
-	  // cancel the last chord played
-	  execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
-	  // reset pointers
-	  reset();
-	}
-	break;
-      }
-    case JackTransportRolling:
-      {
-	jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
+      m_previous = 0;
+      setNext(1);
+    }
 
-	for (size_t i = 0; i < eventCount; ++i)
-	{
-	  jack_midi_event_t inEvent;
-	  jack_midi_event_get(&inEvent, inPortBuf, i);
+    void ChordPlayerHandler::process(const jack_nframes_t nframes)
+    {
+      void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
+      void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
-	  if (m_next == m_chords.size())
+      jack_midi_clear_buffer(outPortBuf);
+
+      const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
+
+      switch (state)
+      {
+      case JackTransportStopped:
+	{
+	  if (m_previousState != state)
 	  {
-	    break;
+	    // make up a reference event
+	    // populating only what is needed by execute()
+	    jack_midi_event_t inEvent;
+	    jack_midi_data_t data[3];
+	    inEvent.buffer = data;
+	    inEvent.size = sizeof(data);
+	    inEvent.buffer[2] = 80; // velocity
+	    inEvent.time = 0; // immediately
+	    // cancel the last chord played
+	    execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
+	    // reset pointers
+	    reset();
 	  }
+	  break;
+	}
+      case JackTransportRolling:
+	{
+	  jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
-	  const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
-
-	  if (cmd == MIDI_NOTEON)
+	  for (size_t i = 0; i < eventCount; ++i)
 	  {
-	    const jack_midi_data_t velocity = inEvent.buffer[2];
+	    jack_midi_event_t inEvent;
+	    jack_midi_event_get(&inEvent, inPortBuf, i);
 
-	    // MuseScore sends velocity = 0 rather than NOTEOFF
-	    if (velocity > 0)
+	    if (m_next == m_chords.size())
 	    {
-	      const jack_midi_data_t note = inEvent.buffer[1];
+	      break;
+	    }
 
-	      const ChordData & next = m_chords[m_next];
-	      if (note == next.trigger)
+	    const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
+
+	    if (cmd == MIDI_NOTEON)
+	    {
+	      const jack_midi_data_t velocity = inEvent.buffer[2];
+
+	      // MuseScore sends velocity = 0 rather than NOTEOFF
+	      if (velocity > 0)
 	      {
-		if (!next.skip)
+		const jack_midi_data_t note = inEvent.buffer[1];
+
+		const ChordData & next = m_chords[m_next];
+		if (note == next.trigger)
 		{
-		  execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
-		  execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
-		  m_previous = m_next;
+		  if (!next.skip)
+		  {
+		    execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
+		    execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
+		    m_previous = m_next;
+		  }
+		  setNext(m_next + 1);
 		}
-		setNext(m_next + 1);
 	      }
 	    }
 	  }
+	  break;
 	}
-	break;
+      default:
+	{
+	  break;
+	}
       }
-    default:
-      {
-	break;
-      }
+
+      m_previousState = state;
     }
 
-    m_previousState = state;
-  }
+    void ChordPlayerHandler::shutdown()
+    {
+    }
 
-  void ChordPlayerHandler::shutdown()
-  {
   }
-
 }
