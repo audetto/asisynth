@@ -1,3 +1,24 @@
+# 1
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin7
+Eb1,Ebmaj
+F2,Bbmaj/F
+F2,Ebmaj/F
+D3,Bbmaj/F
+A2,Fdom7
+
+# 9
+Bb1,Bbmaj
+A1,Fmaj/A
+G1,Gmin
+Eb1,Ebmaj
+F2,Bbmaj/F
+F2,Fsus4
+A2,Fdom7
+F2,Bbsus4
+D3,Bbmaj
+
 # 17
 Bb1,Bbmaj
 A1,Fmaj/A
