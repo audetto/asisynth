@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../InputOutputHandler.h"
-#include "../MidiEvent.h"
-#include "SynthParameters.h"
-#include "Filter.h"
+#include "InputOutputHandler.h"
+#include "MidiEvent.h"
+#include "synth/SynthParameters.h"
+#include "synth/Filter.h"
 
 #include <jack/midiport.h>
 #include <list>
@@ -11,6 +11,8 @@
 
 namespace ASI
 {
+
+  class PortMapper;
 
   namespace Synth
   {
@@ -22,7 +24,7 @@ namespace ASI
     {
     public:
 
-      SynthesiserHandler(jack_client_t * client, const std::string & parametersFile);
+      SynthesiserHandler(jack_client_t * client, PortMapper & mapper, const std::string & parametersFile);
 
       virtual void process(const jack_nframes_t nframes);
 

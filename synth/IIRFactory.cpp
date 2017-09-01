@@ -1,5 +1,5 @@
-#include "IIRFactory.h"
-#include "Filter.h"
+#include "synth/IIRFactory.h"
+#include "synth/Filter.h"
 
 #include <cstdlib>
 

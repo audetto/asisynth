@@ -1,3 +1,4 @@
+#include "PortMapper.h"
 #include "echo/EchoHandler.h"
 #include "mode/ModeHandler.h"
 #include "legato/SuperLegatoHandler.h"
@@ -19,7 +20,8 @@ namespace ASI
   {
     po::options_description desc("ASISynth");
     desc.add_options()
-      ("help,h", "Print this help message");
+      ("help,h", "Print this help message")
+      ("simple,s", "Simple port names");
 
     po::options_description echoDesc("Echo");
     echoDesc.add_options()
@@ -85,12 +87,15 @@ namespace ASI
 	return false;
       }
 
+      const bool simpleNames = vm.count("simple");
+      PortMapper mapper(client, simpleNames);
+
       if (vm.count("echo"))
       {
 	const double lag = vm["echo:delay"].as<double>();
 	const int transposition = vm["echo:transposition"].as<int>();
 	const double velocity = vm["echo:velocity"].as<double>();
-	handlers.push_back(std::make_shared<ASI::Echo::EchoHandler>(client, lag, transposition, velocity));
+	handlers.push_back(std::make_shared<ASI::Echo::EchoHandler>(client, mapper, lag, transposition, velocity));
       }
 
       if (vm.count("mode"))
@@ -98,39 +103,39 @@ namespace ASI
 	const int offset = vm["mode:offset"].as<int>();
 	const std::string target = vm["mode:target"].as<std::string>();
 	const std::string quirk = vm["mode:quirk"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::Mode::ModeHandler>(client, offset, target, quirk));
+	handlers.push_back(std::make_shared<ASI::Mode::ModeHandler>(client, mapper, offset, target, quirk));
       }
 
       if (vm.count("legato"))
       {
 	const int delay = vm["legato:delay"].as<int>();
-	handlers.push_back(std::make_shared<ASI::Legato::SuperLegatoHandler>(client, delay));
+	handlers.push_back(std::make_shared<ASI::Legato::SuperLegatoHandler>(client, mapper, delay));
       }
 
       if (vm.count("chords"))
       {
 	const std::string filename = vm["chords:file"].as<std::string>();
 	const int velocity = vm["chords:velocity"].as<int>();
-	handlers.push_back(std::make_shared<ASI::Chords::ChordPlayerHandler>(client, filename, velocity));
+	handlers.push_back(std::make_shared<ASI::Chords::ChordPlayerHandler>(client, mapper, filename, velocity));
       }
 
       if (vm.count("display"))
       {
 	const std::string filename = vm["display:file"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::Display::DisplayHandler>(client, filename));
+	handlers.push_back(std::make_shared<ASI::Display::DisplayHandler>(client, mapper, filename));
       }
 
       if (vm.count("synth"))
       {
 	const std::string parametersFile = vm["synth:params"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::Synth::SynthesiserHandler>(client, parametersFile));
+	handlers.push_back(std::make_shared<ASI::Synth::SynthesiserHandler>(client, mapper, parametersFile));
       }
 
       if (vm.count("player"))
       {
 	const std::string filename = vm["player:file"].as<std::string>();
 	const size_t firstBeat = vm["player:first"].as<size_t>();
-	handlers.push_back(std::make_shared<ASI::Player::PlayerHandler>(client, filename, firstBeat));
+	handlers.push_back(std::make_shared<ASI::Player::PlayerHandler>(client, mapper, filename, firstBeat));
       }
 
       if (vm.count("trans"))

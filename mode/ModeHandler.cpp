@@ -1,5 +1,6 @@
 #include "ModeHandler.h"
 #include "../MidiCommands.h"
+#include "../PortMapper.h"
 
 #include <cstdlib>
 #include <stdexcept>
@@ -54,11 +55,11 @@ namespace ASI
   namespace Mode
   {
 
-    ModeHandler::ModeHandler(jack_client_t * client, const int offset, const std::string & target, const std::string & quirk)
+    ModeHandler::ModeHandler(jack_client_t * client, PortMapper & mapper, const int offset, const std::string & target, const std::string & quirk)
       : InputOutputHandler(client), m_offset(offset % 12)
     {
-      m_inputPort = jack_port_register(m_client, "mode_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-      m_outputPort = jack_port_register (m_client, "mode_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+      m_inputPort = mapper.registerPort("mode_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = mapper.registerPort("mode_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
 
       if (target == "minor")
       {

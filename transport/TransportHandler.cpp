@@ -1,5 +1,5 @@
-#include "TransportHandler.h"
-#include "../MidiCommands.h"
+#include "transport/TransportHandler.h"
+#include "MidiCommands.h"
 
 #include <cstring>
 

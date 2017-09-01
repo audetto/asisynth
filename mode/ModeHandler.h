@@ -7,6 +7,9 @@
 
 namespace ASI
 {
+
+  class PortMapper;
+
   namespace Mode
   {
 
@@ -22,7 +25,7 @@ namespace ASI
     {
     public:
 
-      ModeHandler(jack_client_t * client, const int offset, const std::string & target, const std::string & quirk);
+      ModeHandler(jack_client_t * client, PortMapper & mapper, const int offset, const std::string & target, const std::string & quirk);
 
       virtual void process(const jack_nframes_t nframes);
 

@@ -1,4 +1,4 @@
-#include "SynthParameters.h"
+#include "synth/SynthParameters.h"
 
 #include <json.hpp>
 #include <fstream>

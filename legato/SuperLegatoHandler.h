@@ -1,13 +1,16 @@
 #pragma once
 
-#include "../InputOutputHandler.h"
-#include "../MidiEvent.h"
+#include "InputOutputHandler.h"
+#include "MidiEvent.h"
 
 #include <jack/midiport.h>
 #include <set>
 
 namespace ASI
 {
+
+  class PortMapper;
+
   namespace Legato
   {
 
@@ -18,7 +21,7 @@ namespace ASI
     {
     public:
 
-      SuperLegatoHandler(jack_client_t * client, const int delayMilliseconds);
+      SuperLegatoHandler(jack_client_t * client, PortMapper & mapper, const int delayMilliseconds);
 
       virtual void process(const jack_nframes_t nframes);
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../InputOutputHandler.h"
-#include "../MidiEvent.h"
+#include "InputOutputHandler.h"
+#include "MidiEvent.h"
 
 #include <jack/midiport.h>
 #include <string>
@@ -9,6 +9,9 @@
 
 namespace ASI
 {
+
+  class PortMapper;
+
   namespace Chords
   {
 
@@ -19,7 +22,7 @@ namespace ASI
     {
     public:
 
-      ChordPlayerHandler(jack_client_t * client, const std::string & filename, const int velocity);
+      ChordPlayerHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename, const int velocity);
 
       virtual void process(const jack_nframes_t nframes);
 

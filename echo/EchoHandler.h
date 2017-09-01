@@ -1,13 +1,17 @@
 #pragma once
 
-#include "../InputOutputHandler.h"
-#include "../MidiEvent.h"
+#include "InputOutputHandler.h"
+#include "MidiEvent.h"
+#include "PortMapper.h"
 
 #include <jack/midiport.h>
 #include <list>
 
 namespace ASI
 {
+
+  class PortMapper;
+
   namespace Echo
   {
 
@@ -18,7 +22,7 @@ namespace ASI
     {
     public:
 
-      EchoHandler(jack_client_t * client, const double lagSeconds, const int transposition, const double velocityRatio);
+      EchoHandler(jack_client_t * client, PortMapper & mapper, const double lagSeconds, const int transposition, const double velocityRatio);
 
       virtual void process(const jack_nframes_t nframes);
 

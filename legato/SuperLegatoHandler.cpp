@@ -1,5 +1,6 @@
-#include "SuperLegatoHandler.h"
-#include "../MidiCommands.h"
+#include "legato/SuperLegatoHandler.h"
+#include "MidiCommands.h"
+#include "PortMapper.h"
 
 #include <cstdlib>
 #include <memory>
@@ -9,11 +10,11 @@ namespace ASI
   namespace Legato
   {
 
-    SuperLegatoHandler::SuperLegatoHandler(jack_client_t * client, const int delayMilliseconds)
+    SuperLegatoHandler::SuperLegatoHandler(jack_client_t * client, PortMapper & mapper, const int delayMilliseconds)
       : InputOutputHandler(client)
     {
-      m_inputPort = jack_port_register(m_client, "legato_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-      m_outputPort = jack_port_register (m_client, "legato_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+      m_inputPort = mapper.registerPort("legato_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = mapper.registerPort("legato_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
 
       if (delayMilliseconds < 0)
       {

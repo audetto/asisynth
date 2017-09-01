@@ -9,21 +9,24 @@ add_executable(asisynth
   InputOutputHandler
   MidiEvent.cpp
   MidiUtils.cpp
+  PortMapper.cpp
   chords/ChordPlayerHandler.cpp
   display/DisplayHandler.cpp
   echo/EchoHandler.cpp
   legato/SuperLegatoHandler.cpp
   mode/ModeHandler.cpp
+  player/PlayerParameters.cpp
+  player/PlayerHandler.cpp
   synth/IIRFactory.cpp
   synth/SynthesiserHandler.cpp
   synth/SynthParameters.cpp
-  player/PlayerParameters.cpp
-  player/PlayerHandler.cpp
   transport/TransportHandler.cpp
   )
 
 add_library(sigproc
   sigproc/liir.c)
+
+include_directories(${PROJECT_SOURCE_DIR})
 
 target_link_libraries(asisynth jack)
 target_link_libraries(asisynth boost_program_options)

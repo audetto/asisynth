@@ -1,6 +1,7 @@
-#include "DisplayHandler.h"
-#include "../MidiCommands.h"
-#include "../MidiUtils.h"
+#include "display/DisplayHandler.h"
+#include "MidiCommands.h"
+#include "MidiUtils.h"
+#include "PortMapper.h"
 
 #include <iostream>
 #include <fstream>
@@ -11,10 +12,10 @@ namespace ASI
   namespace Display
   {
 
-    DisplayHandler::DisplayHandler(jack_client_t * client, const std::string & filename)
+    DisplayHandler::DisplayHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename)
       : m_client(client)
     {
-      m_inputPort = jack_port_register(m_client, "display_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
+      m_inputPort = mapper.registerPort("display_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
       m_offset = 0.0;
       m_onTimes.resize(256, 0.0);
 

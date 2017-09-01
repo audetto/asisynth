@@ -1,6 +1,7 @@
-#include "PlayerHandler.h"
-#include "PlayerParameters.h"
-#include "../MidiCommands.h"
+#include "player/PlayerHandler.h"
+#include "player/PlayerParameters.h"
+#include "MidiCommands.h"
+#include "PortMapper.h"
 
 #include <algorithm>
 
@@ -48,10 +49,10 @@ namespace ASI
   namespace Player
   {
 
-    PlayerHandler::PlayerHandler(jack_client_t * client, const std::string & filename, const size_t firstBeat)
+    PlayerHandler::PlayerHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename, const size_t firstBeat)
       : InputOutputHandler(client), m_firstBeat(firstBeat)
     {
-      m_outputPort = jack_port_register (m_client, "player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+      m_outputPort = mapper.registerPort("player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
 
       const std::shared_ptr<const Melody> melody = loadPlayerMelody(filename);
 

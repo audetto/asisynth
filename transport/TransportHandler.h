@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../InputOutputHandler.h"
+#include "InputOutputHandler.h"
 
 namespace ASI
 {

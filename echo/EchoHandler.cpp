@@ -1,5 +1,6 @@
-#include "EchoHandler.h"
-#include "../MidiCommands.h"
+#include "echo/EchoHandler.h"
+#include "MidiCommands.h"
+#include "PortMapper.h"
 
 namespace
 {
@@ -31,11 +32,11 @@ namespace ASI
   namespace Echo
   {
 
-    EchoHandler::EchoHandler(jack_client_t * client, const double lagSeconds, const int transposition, const double velocityRatio)
+    EchoHandler::EchoHandler(jack_client_t * client, PortMapper & mapper, const double lagSeconds, const int transposition, const double velocityRatio)
       : InputOutputHandler(client), m_transposition(transposition), m_velocityRatio(velocityRatio)
     {
-      m_inputPort = jack_port_register(m_client, "echo_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-      m_outputPort = jack_port_register (m_client, "echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+      m_inputPort = mapper.registerPort("echo_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = mapper.registerPort("echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
       m_lagFrames = lagSeconds * m_sampleRate;
     }
 

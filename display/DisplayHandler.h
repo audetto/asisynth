@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../I_JackHandler.h"
+#include "I_JackHandler.h"
 
 #include <jack/midiport.h>
 #include <string>
@@ -9,6 +9,9 @@
 
 namespace ASI
 {
+
+  class PortMapper;
+
   namespace Display
   {
 
@@ -16,7 +19,7 @@ namespace ASI
     {
     public:
 
-      DisplayHandler(jack_client_t * client, const std::string & filename);
+      DisplayHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename);
 
       virtual void process(const jack_nframes_t nframes);
 

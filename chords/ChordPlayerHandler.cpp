@@ -1,6 +1,7 @@
-#include "ChordPlayerHandler.h"
-#include "../MidiCommands.h"
-#include "../MidiUtils.h"
+#include "chords/ChordPlayerHandler.h"
+#include "MidiCommands.h"
+#include "MidiUtils.h"
+#include "PortMapper.h"
 
 #include <fstream>
 #include <iostream>
@@ -204,11 +205,11 @@ namespace ASI
   namespace Chords
   {
 
-    ChordPlayerHandler::ChordPlayerHandler(jack_client_t * client, const std::string & filename, const int velocity)
+    ChordPlayerHandler::ChordPlayerHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename, const int velocity)
       : InputOutputHandler(client), m_filename(filename), m_velocity(velocity)
     {
-      m_inputPort = jack_port_register(m_client, "chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput, 0);
-      m_outputPort = jack_port_register (m_client, "chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
+      m_inputPort = mapper.registerPort("chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = mapper.registerPort("chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
 
       m_previousState = JackTransportStopped;
 
