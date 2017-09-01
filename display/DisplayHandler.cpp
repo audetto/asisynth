@@ -30,7 +30,7 @@ namespace ASI
       }
 
       // write header
-      *m_output << "Time,Code,Command,Note,Velocity,Name,On,Duration" << std::endl;
+      *m_output << "Time,Code,Command,Channel,Note,Velocity,Name,On,Duration" << std::endl;
     }
 
     void DisplayHandler::process(const jack_nframes_t nframes)
@@ -52,13 +52,19 @@ namespace ASI
 	jack_midi_event_get(&inEvent, inPortBuf, i);
 
 	const jack_midi_data_t cmd = inEvent.buffer[0] & 0xf0;
+	const jack_midi_data_t channel = inEvent.buffer[0] & 0x0f;
 
 	const jack_nframes_t absTime = framesAtStart + inEvent.time;
 
 	const jack_time_t t = jack_frames_to_time(m_client, absTime); // microseconds
 	const double time = (t - m_offset) / 1000000.0;
 
-	*m_output << time << "," << (int)inEvent.buffer[0] << "," << (int)cmd;
+	*m_output << time;
+	*m_output << std::hex;
+	*m_output << "," << (int)inEvent.buffer[0];
+	*m_output << "," << (int)cmd;
+	*m_output << "," << (int)channel;
+	*m_output << std::dec;
 
 	switch (cmd)
 	{
