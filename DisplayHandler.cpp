@@ -54,7 +54,7 @@ namespace ASI
       const jack_time_t t = jack_frames_to_time(m_client, absTime); // microseconds
       const double time = (t - m_offset) / 1000000.0;
 
-      *m_output << time << "," << (int)inEvent.buffer[0];
+      *m_output << time << "," << (int)inEvent.buffer[0] << "," << (int)cmd;
 
       switch (cmd)
       {
@@ -64,7 +64,7 @@ namespace ASI
 	  const jack_midi_data_t velocity = inEvent.buffer[2];
 	  m_onTimes[note] = time;
 
-	  *m_output << "," << (int)cmd << "," << (int)note << "," << (int)velocity << ",";
+	  *m_output << "," << (int)note << "," << (int)velocity << ",";
 	  streamNoteName(*m_output, note, BEST);
 	  break;
 	}
@@ -73,10 +73,12 @@ namespace ASI
 	  const jack_midi_data_t note = inEvent.buffer[1];
 	  const jack_midi_data_t velocity = inEvent.buffer[2];
 
+	  // this is a vector, not a map
+	  // initialised to 0.0 anyway
 	  const double onTime = m_onTimes[note];
 	  const double duration = time - onTime;
 
-	  *m_output << "," << (int)cmd << "," << (int)note << "," << (int)velocity << ",";
+	  *m_output << "," << (int)note << "," << (int)velocity << ",";
 	  streamNoteName(*m_output, note, BEST);
 	  *m_output << "," << onTime << "," << duration;
 	  break;
@@ -85,13 +87,13 @@ namespace ASI
 	{
 	  const jack_midi_data_t control = inEvent.buffer[1];
 	  const jack_midi_data_t value = inEvent.buffer[2];
-	  *m_output << "," << (int)cmd << "," << (int)control << "," << (int)value;
+	  *m_output << "," << (int)control << "," << (int)value;
 	  break;
 	}
       case MIDI_PC:
 	{
 	  const jack_midi_data_t program = inEvent.buffer[1];
-	  *m_output << "," << (int)cmd << "," << (int)program;
+	  *m_output << "," << (int)program;
 	}
       }
 
