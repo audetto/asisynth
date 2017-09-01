@@ -4,13 +4,13 @@ project(asisynth)
 
 add_executable(asisynth
   AsiSynth.cpp
-  DisplayHandler.cpp
   Factory.cpp
   I_JackHandler.cpp
   InputOutputHandler
   MidiEvent.cpp
   MidiUtils.cpp
   chords/ChordPlayerHandler.cpp
+  display/DisplayHandler.cpp
   echo/EchoHandler.cpp
   legato/SuperLegatoHandler.cpp
   mode/ModeHandler.cpp

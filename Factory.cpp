@@ -2,7 +2,7 @@
 #include "mode/ModeHandler.h"
 #include "legato/SuperLegatoHandler.h"
 #include "chords/ChordPlayerHandler.h"
-#include "DisplayHandler.h"
+#include "display/DisplayHandler.h"
 #include "synth/SynthesiserHandler.h"
 #include "player/PlayerHandler.h"
 #include "transport/TransportHandler.h"
@@ -117,7 +117,7 @@ namespace ASI
       if (vm.count("display"))
       {
 	const std::string filename = vm["display:file"].as<std::string>();
-	handlers.push_back(std::make_shared<ASI::DisplayHandler>(client, filename));
+	handlers.push_back(std::make_shared<ASI::Display::DisplayHandler>(client, filename));
       }
 
       if (vm.count("synth"))
