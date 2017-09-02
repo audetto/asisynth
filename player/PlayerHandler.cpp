@@ -15,9 +15,12 @@ namespace
     return velocity[position];
   }
 
-  void processMelody(const ASI::Player::Melody & melody, const size_t sampleRate, const size_t firstBeat, std::vector<ASI::MidiEvent> & events)
+  void processMelody(const ASI::Player::Melody & melody, const jack_midi_data_t channel, const size_t sampleRate, const size_t firstBeat, std::vector<ASI::MidiEvent> & events)
   {
     events.clear();
+
+    const jack_midi_data_t on = MIDI_NOTEON | channel;
+    const jack_midi_data_t off = MIDI_NOTEOFF | channel;
 
     size_t beat = 0;
     for (const ASI::Player::Chord & chord : melody.chords)
@@ -32,8 +35,8 @@ namespace
 	const size_t adjustedEnd = start + (end - start) * melody.legatoCoeff;
 	for (const size_t note : chord.notes)
 	{
-	  events.emplace_back(start, MIDI_NOTEON, note, velocity);
-	  events.emplace_back(adjustedEnd, MIDI_NOTEOFF, note, velocity);
+	  events.emplace_back(start, on, note, velocity);
+	  events.emplace_back(adjustedEnd, off, note, velocity);
 	}
       }
       ++beat;
@@ -56,7 +59,9 @@ namespace ASI
 
       const std::shared_ptr<const Melody> melody = loadPlayerMelody(filename);
 
-      processMelody(*melody, m_sampleRate, m_firstBeat, m_master);
+      const jack_midi_data_t channel = m_common->getChannel();
+
+      processMelody(*melody, channel, m_sampleRate, m_firstBeat, m_master);
       m_position = 0;
       m_previousState = JackTransportStopped;
     }

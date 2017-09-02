@@ -6,9 +6,15 @@
 namespace ASI
 {
 
-  CommonControls::CommonControls(jack_client_t * client, const bool simpleNames)
-    : m_client(client), m_simpleNames(simpleNames), m_midiInputId(0), m_midiOutputId(0), m_audioInputId(0), m_audioOutputId(0)
+  CommonControls::CommonControls(jack_client_t * client, const bool simpleNames, const jack_midi_data_t channel)
+    : m_client(client), m_simpleNames(simpleNames), m_channel(channel - 1), m_midiInputId(0), m_midiOutputId(0), m_audioInputId(0), m_audioOutputId(0)
   {
+    if (m_channel > 0x0f || m_channel < 0x00)
+    {
+      std::ostringstream message;
+      message << "Invalid channel: " << (int)channel;
+      throw std::runtime_error(message.str());
+    }
   }
 
   std::string CommonControls::getPortName(const char * port_name,
@@ -67,5 +73,11 @@ namespace ASI
   {
     return m_client;
   }
+
+  jack_midi_data_t CommonControls::getChannel() const
+  {
+    return m_channel;
+  }
+
 
 }

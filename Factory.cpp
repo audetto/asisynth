@@ -21,7 +21,8 @@ namespace ASI
     po::options_description desc("ASISynth");
     desc.add_options()
       ("help,h", "Print this help message")
-      ("simple,s", "Simple port names");
+      ("simple,s", "Simple port names")
+      ("channel,c", po::value<int>()->default_value(0), "Output channel (1-based)");
 
     po::options_description echoDesc("Echo");
     echoDesc.add_options()
@@ -88,7 +89,8 @@ namespace ASI
       }
 
       const bool simpleNames = vm.count("simple");
-      const std::shared_ptr<CommonControls> common(new CommonControls(client, simpleNames));
+      const jack_midi_data_t channel = vm["channel"].as<int>();
+      const std::shared_ptr<CommonControls> common(new CommonControls(client, simpleNames, channel));
 
       if (vm.count("echo"))
       {

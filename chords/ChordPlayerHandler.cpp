@@ -261,6 +261,10 @@ namespace ASI
 
       const jack_transport_state_t state = jack_transport_query(client, nullptr);
 
+      const jack_midi_data_t channel = m_common->getChannel();
+      const jack_midi_data_t on = MIDI_NOTEON | channel;
+      const jack_midi_data_t off = MIDI_NOTEOFF | channel;
+
       switch (state)
       {
       case JackTransportStopped:
@@ -276,7 +280,7 @@ namespace ASI
 	    inEvent.buffer[2] = 80; // velocity
 	    inEvent.time = 0; // immediately
 	    // cancel the last chord played
-	    execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
+	    execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], off);
 	    // reset pointers
 	    reset();
 	  }
@@ -312,8 +316,8 @@ namespace ASI
 		{
 		  if (!next.skip)
 		  {
-		    execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], MIDI_NOTEOFF);
-		    execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], MIDI_NOTEON);
+		    execute(outPortBuf, m_velocity, inEvent, m_chords[m_previous], off);
+		    execute(outPortBuf, m_velocity, inEvent, m_chords[m_next], on);
 		    m_previous = m_next;
 		  }
 		  setNext(m_next + 1);

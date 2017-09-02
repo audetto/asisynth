@@ -153,7 +153,7 @@ namespace ASI
 	    {
 	      jack_midi_data_t data[3];
 	      data[0] = inEvent.buffer[0];
-	      data[1] = noteToUse;;
+	      data[1] = noteToUse;
 	      data[2] = inEvent.buffer[2];
 
 	      jack_midi_event_write(outPortBuf, inEvent.time, data, 3);
