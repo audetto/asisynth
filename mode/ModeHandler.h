@@ -1,15 +1,12 @@
 #pragma once
 
-#include "../InputOutputHandler.h"
-#include "../MidiEvent.h"
+#include "InputOutputHandler.h"
+#include "MidiEvent.h"
 
 #include <string>
 
 namespace ASI
 {
-
-  class PortMapper;
-
   namespace Mode
   {
 
@@ -25,7 +22,7 @@ namespace ASI
     {
     public:
 
-      ModeHandler(jack_client_t * client, PortMapper & mapper, const int offset, const std::string & target, const std::string & quirk);
+      ModeHandler(const std::shared_ptr<CommonControls> & common, const int offset, const std::string & target, const std::string & quirk);
 
       virtual void process(const jack_nframes_t nframes);
 

@@ -1,12 +1,15 @@
 #include "InputOutputHandler.h"
 #include "MidiCommands.h"
+#include "CommonControls.h"
 
 namespace ASI
 {
 
-  InputOutputHandler::InputOutputHandler(jack_client_t * client)
-    : m_client(client), m_inputPort(nullptr), m_outputPort(nullptr)
-    , m_sampleRate(jack_get_sample_rate(m_client)), m_notes(127, 0)
+  InputOutputHandler::InputOutputHandler(const std::shared_ptr<CommonControls> & common)
+    : m_common(common)
+    , m_sampleRate(jack_get_sample_rate(m_common->getClient()))
+    , m_inputPort(nullptr), m_outputPort(nullptr)
+    , m_notes(127, 0)
   {
   }
 

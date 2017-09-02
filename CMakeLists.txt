@@ -4,12 +4,12 @@ project(asisynth)
 
 add_executable(asisynth
   AsiSynth.cpp
+  CommonControls.cpp
   Factory.cpp
   I_JackHandler.cpp
   InputOutputHandler
   MidiEvent.cpp
   MidiUtils.cpp
-  PortMapper.cpp
   chords/ChordPlayerHandler.cpp
   display/DisplayHandler.cpp
   echo/EchoHandler.cpp
@@ -36,7 +36,7 @@ set_property(TARGET asisynth PROPERTY CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -march=native -ffast-math -funroll-loops -fassociative-math")
 
-MESSAGE("Build type is:                   ${CMAKE_BUILD_TYPE}")
+MESSAGE("CMAKE_BUILD_TYPE:                ${CMAKE_BUILD_TYPE}")
 MESSAGE("CMAKE_CXX_FLAGS:                 ${CMAKE_CXX_FLAGS}")
 MESSAGE("CMAKE_CXX_FLAGS_RELEASE:         ${CMAKE_CXX_FLAGS_RELEASE}")
 MESSAGE("CMAKE_CXX_FLAGS_DEBUG:           ${CMAKE_CXX_FLAGS_DEBUG}")

@@ -9,8 +9,6 @@
 namespace ASI
 {
 
-  class PortMapper;
-
   namespace Legato
   {
 
@@ -21,7 +19,7 @@ namespace ASI
     {
     public:
 
-      SuperLegatoHandler(jack_client_t * client, PortMapper & mapper, const int delayMilliseconds);
+      SuperLegatoHandler(const std::shared_ptr<CommonControls> & common, const int delayMilliseconds);
 
       virtual void process(const jack_nframes_t nframes);
 

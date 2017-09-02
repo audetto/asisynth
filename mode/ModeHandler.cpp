@@ -1,6 +1,6 @@
 #include "ModeHandler.h"
-#include "../MidiCommands.h"
-#include "../PortMapper.h"
+#include "MidiCommands.h"
+#include "CommonControls.h"
 
 #include <cstdlib>
 #include <stdexcept>
@@ -55,11 +55,11 @@ namespace ASI
   namespace Mode
   {
 
-    ModeHandler::ModeHandler(jack_client_t * client, PortMapper & mapper, const int offset, const std::string & target, const std::string & quirk)
-      : InputOutputHandler(client), m_offset(offset % 12)
+    ModeHandler::ModeHandler(const std::shared_ptr<CommonControls> & common, const int offset, const std::string & target, const std::string & quirk)
+      : InputOutputHandler(common), m_offset(offset % 12)
     {
-      m_inputPort = mapper.registerPort("mode_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
-      m_outputPort = mapper.registerPort("mode_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
+      m_inputPort = m_common->registerPort("mode_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = m_common->registerPort("mode_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
 
       if (target == "minor")
       {
@@ -98,12 +98,14 @@ namespace ASI
 
     void ModeHandler::process(const jack_nframes_t nframes)
     {
+      jack_client_t * client = m_common->getClient();
+
       void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
       void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
       jack_midi_clear_buffer(outPortBuf);
 
-      const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
+      const jack_transport_state_t state = jack_transport_query(client, nullptr);
 
       const jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 

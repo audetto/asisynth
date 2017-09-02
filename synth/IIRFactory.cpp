@@ -5,7 +5,7 @@
 
 extern "C"
 {
-#include "../sigproc/iir.h"
+#include "sigproc/iir.h"
 }
 
 namespace ASI

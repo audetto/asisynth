@@ -11,9 +11,6 @@
 
 namespace ASI
 {
-
-  class PortMapper;
-
   namespace Synth
   {
 
@@ -24,7 +21,7 @@ namespace ASI
     {
     public:
 
-      SynthesiserHandler(jack_client_t * client, PortMapper & mapper, const std::string & parametersFile);
+      SynthesiserHandler(const std::shared_ptr<CommonControls> & common, const std::string & parametersFile);
 
       virtual void process(const jack_nframes_t nframes);
 

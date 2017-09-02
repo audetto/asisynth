@@ -1,7 +1,7 @@
 #include "chords/ChordPlayerHandler.h"
 #include "MidiCommands.h"
 #include "MidiUtils.h"
-#include "PortMapper.h"
+#include "CommonControls.h"
 
 #include <fstream>
 #include <iostream>
@@ -205,11 +205,11 @@ namespace ASI
   namespace Chords
   {
 
-    ChordPlayerHandler::ChordPlayerHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename, const int velocity)
-      : InputOutputHandler(client), m_filename(filename), m_velocity(velocity)
+    ChordPlayerHandler::ChordPlayerHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename, const int velocity)
+      : InputOutputHandler(common), m_filename(filename), m_velocity(velocity)
     {
-      m_inputPort = mapper.registerPort("chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
-      m_outputPort = mapper.registerPort("chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
+      m_inputPort = m_common->registerPort("chord_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = m_common->registerPort("chord_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
 
       m_previousState = JackTransportStopped;
 
@@ -252,12 +252,14 @@ namespace ASI
 
     void ChordPlayerHandler::process(const jack_nframes_t nframes)
     {
+      jack_client_t * client = m_common->getClient();
+
       void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
       void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
       jack_midi_clear_buffer(outPortBuf);
 
-      const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
+      const jack_transport_state_t state = jack_transport_query(client, nullptr);
 
       switch (state)
       {

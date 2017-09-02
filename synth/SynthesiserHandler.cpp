@@ -2,7 +2,7 @@
 #include "synth/IIRFactory.h"
 
 #include "MidiCommands.h"
-#include "PortMapper.h"
+#include "CommonControls.h"
 
 #include <cmath>
 #include <cstring>
@@ -100,11 +100,11 @@ namespace ASI
 
   namespace Synth
   {
-    SynthesiserHandler::SynthesiserHandler(jack_client_t * client, PortMapper & mapper, const std::string & parametersFile)
-      : InputOutputHandler(client), m_parametersFile(parametersFile)
+    SynthesiserHandler::SynthesiserHandler(const std::shared_ptr<CommonControls> & common, const std::string & parametersFile)
+      : InputOutputHandler(common), m_parametersFile(parametersFile)
     {
-      m_inputPort = mapper.registerPort("synth_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
-      m_outputPort = mapper.registerPort("synth_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
+      m_inputPort = m_common->registerPort("synth_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = m_common->registerPort("synth_out", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
 
       m_parameters = loadSynthParameters(m_parametersFile);
 

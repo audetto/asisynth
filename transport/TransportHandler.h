@@ -4,6 +4,9 @@
 
 namespace ASI
 {
+
+  class CommonControls;
+
   namespace Transport
   {
 
@@ -14,7 +17,7 @@ namespace ASI
     {
     public:
 
-      TransportHandler(jack_client_t * client);
+      TransportHandler(const std::shared_ptr<CommonControls> & common);
 
       virtual void process(const jack_nframes_t nframes);
 

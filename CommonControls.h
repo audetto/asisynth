@@ -2,18 +2,21 @@
 
 #include <jack/jack.h>
 #include <string>
+#include <memory>
 
 namespace ASI
 {
 
-  class PortMapper
+  class CommonControls
   {
   public:
-    PortMapper(jack_client_t * client, const bool simpleNames);
+    CommonControls(jack_client_t * client, const bool simpleNames);
 
     jack_port_t * registerPort(const char * port_name,
 			       const char * port_type,
 			       const unsigned long flags);
+
+    jack_client_t * getClient() const;
 
   private:
     std::string getPortName(const char * port_name,

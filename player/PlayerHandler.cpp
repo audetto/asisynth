@@ -1,7 +1,7 @@
 #include "player/PlayerHandler.h"
 #include "player/PlayerParameters.h"
 #include "MidiCommands.h"
-#include "PortMapper.h"
+#include "CommonControls.h"
 
 #include <algorithm>
 
@@ -49,10 +49,10 @@ namespace ASI
   namespace Player
   {
 
-    PlayerHandler::PlayerHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename, const size_t firstBeat)
-      : InputOutputHandler(client), m_firstBeat(firstBeat)
+    PlayerHandler::PlayerHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename, const size_t firstBeat)
+      : InputOutputHandler(common), m_firstBeat(firstBeat)
     {
-      m_outputPort = mapper.registerPort("player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
+      m_outputPort = m_common->registerPort("player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
 
       const std::shared_ptr<const Melody> melody = loadPlayerMelody(filename);
 
@@ -63,12 +63,14 @@ namespace ASI
 
     void PlayerHandler::process(const jack_nframes_t nframes)
     {
+      jack_client_t * client = m_common->getClient();
+
       void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
       jack_midi_clear_buffer(outPortBuf);
 
       jack_position_t pos;
-      const jack_transport_state_t state = jack_transport_query(m_client, &pos);
+      const jack_transport_state_t state = jack_transport_query(client, &pos);
 
       switch (state)
       {
@@ -85,7 +87,7 @@ namespace ASI
 	}
       case JackTransportRolling:
 	{
-	  const jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
+	  const jack_nframes_t framesAtStart = jack_last_frame_time(client);
 	  const jack_nframes_t lastFrame = framesAtStart + nframes;
 
 	  const jack_nframes_t startFrame = framesAtStart - pos.frame;

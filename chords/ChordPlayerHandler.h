@@ -9,9 +9,6 @@
 
 namespace ASI
 {
-
-  class PortMapper;
-
   namespace Chords
   {
 
@@ -22,7 +19,7 @@ namespace ASI
     {
     public:
 
-      ChordPlayerHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename, const int velocity);
+      ChordPlayerHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename, const int velocity);
 
       virtual void process(const jack_nframes_t nframes);
 

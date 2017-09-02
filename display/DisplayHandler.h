@@ -10,7 +10,7 @@
 namespace ASI
 {
 
-  class PortMapper;
+  class CommonControls;
 
   namespace Display
   {
@@ -19,7 +19,7 @@ namespace ASI
     {
     public:
 
-      DisplayHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename);
+      DisplayHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename);
 
       virtual void process(const jack_nframes_t nframes);
 
@@ -27,7 +27,7 @@ namespace ASI
 
     private:
 
-      jack_client_t *m_client;
+      const std::shared_ptr<CommonControls> m_common;
       jack_port_t *m_inputPort;
 
       std::shared_ptr<std::ostream> m_output;

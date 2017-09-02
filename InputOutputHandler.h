@@ -4,14 +4,17 @@
 
 #include <jack/midiport.h>
 #include <vector>
+#include <memory>
 
 namespace ASI
 {
 
+  class CommonControls;
+
   class InputOutputHandler : public I_JackHandler
   {
   public:
-    InputOutputHandler(jack_client_t * client);
+    InputOutputHandler(const std::shared_ptr<CommonControls> & common);
 
   protected:
 
@@ -20,11 +23,12 @@ namespace ASI
     void noteChange(const jack_midi_data_t * data);
     void allNotesOff(void * buffer, const jack_midi_data_t time);
 
-    jack_client_t *m_client;
+    const std::shared_ptr<CommonControls> m_common;
+    const jack_nframes_t m_sampleRate;
+
     jack_port_t *m_inputPort;
     jack_port_t *m_outputPort;
 
-    const jack_nframes_t m_sampleRate;
 
   private:
     std::vector<int> m_notes;

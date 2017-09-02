@@ -10,8 +10,6 @@
 namespace ASI
 {
 
-  class PortMapper;
-
   namespace Player
   {
 
@@ -22,7 +20,7 @@ namespace ASI
     {
     public:
 
-      PlayerHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename, const size_t firstBeat);
+      PlayerHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename, const size_t firstBeat);
 
       virtual void process(const jack_nframes_t nframes);
 

@@ -1,7 +1,7 @@
 #include "display/DisplayHandler.h"
 #include "MidiCommands.h"
 #include "MidiUtils.h"
-#include "PortMapper.h"
+#include "CommonControls.h"
 
 #include <iostream>
 #include <fstream>
@@ -12,10 +12,10 @@ namespace ASI
   namespace Display
   {
 
-    DisplayHandler::DisplayHandler(jack_client_t * client, PortMapper & mapper, const std::string & filename)
-      : m_client(client)
+    DisplayHandler::DisplayHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename)
+      : m_common(common)
     {
-      m_inputPort = mapper.registerPort("display_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_inputPort = m_common->registerPort("display_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
       m_offset = 0.0;
       m_onTimes.resize(256, 0.0);
 
@@ -35,15 +35,17 @@ namespace ASI
 
     void DisplayHandler::process(const jack_nframes_t nframes)
     {
+      jack_client_t * client = m_common->getClient();
+
       void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
 
       jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
-      jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
+      jack_nframes_t framesAtStart = jack_last_frame_time(client);
 
       if (eventCount > 0 && m_offset == 0.0)
       {
-	m_offset = jack_frames_to_time(m_client, framesAtStart);
+	m_offset = jack_frames_to_time(client, framesAtStart);
       }
 
       for(size_t i = 0; i < eventCount; ++i)
@@ -56,7 +58,7 @@ namespace ASI
 
 	const jack_nframes_t absTime = framesAtStart + inEvent.time;
 
-	const jack_time_t t = jack_frames_to_time(m_client, absTime); // microseconds
+	const jack_time_t t = jack_frames_to_time(client, absTime); // microseconds
 	const double time = (t - m_offset) / 1000000.0;
 
 	*m_output << time;

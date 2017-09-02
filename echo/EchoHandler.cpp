@@ -1,6 +1,6 @@
 #include "echo/EchoHandler.h"
 #include "MidiCommands.h"
-#include "PortMapper.h"
+#include "CommonControls.h"
 
 namespace
 {
@@ -32,22 +32,24 @@ namespace ASI
   namespace Echo
   {
 
-    EchoHandler::EchoHandler(jack_client_t * client, PortMapper & mapper, const double lagSeconds, const int transposition, const double velocityRatio)
-      : InputOutputHandler(client), m_transposition(transposition), m_velocityRatio(velocityRatio)
+    EchoHandler::EchoHandler(const std::shared_ptr<CommonControls> & common, const double lagSeconds, const int transposition, const double velocityRatio)
+      : InputOutputHandler(common), m_transposition(transposition), m_velocityRatio(velocityRatio)
     {
-      m_inputPort = mapper.registerPort("echo_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
-      m_outputPort = mapper.registerPort("echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
+      m_inputPort = m_common->registerPort("echo_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_outputPort = m_common->registerPort("echo_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
       m_lagFrames = lagSeconds * m_sampleRate;
     }
 
     void EchoHandler::process(const jack_nframes_t nframes)
     {
+      jack_client_t * client = m_common->getClient();
+
       void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
       void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
       jack_midi_clear_buffer(outPortBuf);
 
-      const jack_transport_state_t state = jack_transport_query(m_client, nullptr);
+      const jack_transport_state_t state = jack_transport_query(client, nullptr);
 
       switch(state)
       {
@@ -65,7 +67,7 @@ namespace ASI
 	{
 	  const jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
-	  const jack_nframes_t framesAtStart = jack_last_frame_time(m_client);
+	  const jack_nframes_t framesAtStart = jack_last_frame_time(client);
 
 	  for (size_t i = 0; i < eventCount; ++i)
 	  {
