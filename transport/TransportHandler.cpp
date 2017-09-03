@@ -27,6 +27,8 @@ namespace ASI
       void* inPortBuf = jack_port_get_buffer(m_inputPort, nframes);
       void* outPortBuf = jack_port_get_buffer(m_outputPort, nframes);
 
+      jack_midi_clear_buffer(outPortBuf);
+
       jack_nframes_t eventCount = jack_midi_get_event_count(inPortBuf);
 
       for (size_t i = 0; i < eventCount; ++i)
