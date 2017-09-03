@@ -262,8 +262,8 @@ namespace ASI
       const jack_transport_state_t state = jack_transport_query(client, nullptr);
 
       const jack_midi_data_t channel = m_common->getChannel();
-      const jack_midi_data_t on = MIDI_NOTEON | channel;
-      const jack_midi_data_t off = MIDI_NOTEOFF | channel;
+      const jack_midi_data_t on = MIDI_NOTEON | (channel - 1);
+      const jack_midi_data_t off = MIDI_NOTEOFF | (channel - 1);
 
       switch (state)
       {

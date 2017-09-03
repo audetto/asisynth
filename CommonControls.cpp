@@ -1,4 +1,5 @@
 #include "CommonControls.h"
+#include "sounds/Sounds.h"
 
 #include <jack/midiport.h>
 #include <sstream>
@@ -6,10 +7,12 @@
 namespace ASI
 {
 
-  CommonControls::CommonControls(jack_client_t * client, const bool simpleNames, const jack_midi_data_t channel)
-    : m_client(client), m_simpleNames(simpleNames), m_channel(channel - 1), m_midiInputId(0), m_midiOutputId(0), m_audioInputId(0), m_audioOutputId(0)
+  CommonControls::CommonControls(jack_client_t * client, const bool simpleNames, const jack_midi_data_t channel, const std::string & piano)
+    : m_client(client), m_simpleNames(simpleNames), m_channel(channel)
+    , m_sounds(Sounds::getPianoSounds(piano))
+    , m_midiInputId(0), m_midiOutputId(0), m_audioInputId(0), m_audioOutputId(0)
   {
-    if (m_channel > 0x0f || m_channel < 0x00)
+    if (m_channel > 0x10 || m_channel < 0x01)
     {
       std::ostringstream message;
       message << "Invalid channel: " << (int)channel;
@@ -18,8 +21,8 @@ namespace ASI
   }
 
   std::string CommonControls::getPortName(const char * port_name,
-				      const char * port_type,
-				      const unsigned long flags)
+					  const char * port_type,
+					  const unsigned long flags)
   {
     if (!m_simpleNames)
     {
@@ -61,8 +64,8 @@ namespace ASI
   }
 
   jack_port_t * CommonControls::registerPort(const char * port_name,
-					 const char * port_type,
-					 const unsigned long flags)
+					     const char * port_type,
+					     const unsigned long flags)
   {
     const std::string name = getPortName(port_name, port_type, flags);
     jack_port_t * port = jack_port_register(m_client, name.c_str(), port_type, flags, 0);
@@ -79,5 +82,9 @@ namespace ASI
     return m_channel;
   }
 
+  const std::map<jack_midi_data_t, Sounds::Program> & CommonControls::getSelectedSounds() const
+  {
+    return m_sounds;
+  }
 
 }

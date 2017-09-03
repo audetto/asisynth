@@ -17,6 +17,7 @@ add_executable(asisynth
   mode/ModeHandler.cpp
   player/PlayerParameters.cpp
   player/PlayerHandler.cpp
+  sounds/Sounds.cpp
   synth/IIRFactory.cpp
   synth/SynthesiserHandler.cpp
   synth/SynthParameters.cpp

@@ -19,8 +19,8 @@ namespace
   {
     events.clear();
 
-    const jack_midi_data_t on = MIDI_NOTEON | channel;
-    const jack_midi_data_t off = MIDI_NOTEOFF | channel;
+    const jack_midi_data_t on = MIDI_NOTEON | (channel - 1);
+    const jack_midi_data_t off = MIDI_NOTEOFF | (channel - 1);
 
     size_t beat = 0;
     for (const ASI::Player::Chord & chord : melody.chords)

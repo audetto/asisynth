@@ -22,14 +22,15 @@ namespace ASI
     desc.add_options()
       ("help,h", "Print this help message")
       ("simple,s", "Simple port names")
-      ("channel,c", po::value<int>()->default_value(0), "Output channel (1-based)");
+      ("channel,c", po::value<int>()->default_value(1), "Output channel (1-based)")
+      ("piano,p", po::value<std::string>()->default_value("kdp90"), "Digital piano");
 
     po::options_description echoDesc("Echo");
     echoDesc.add_options()
-      ("echo,e", "Enable echo effect")
-      ("echo:delay,d", po::value<double>()->default_value(0.0), "Delay in seconds")
-      ("echo:transposition,t", po::value<int>()->default_value(0), "Transposition in semitones")
-      ("echo:velocity,v", po::value<double>()->default_value(1.0), "Velocity ratio");
+      ("echo", "Enable echo effect")
+      ("echo:delay", po::value<double>()->default_value(0.0), "Delay in seconds")
+      ("echo:transposition", po::value<int>()->default_value(0), "Transposition in semitones")
+      ("echo:velocity", po::value<double>()->default_value(1.0), "Velocity ratio");
     desc.add(echoDesc);
 
     po::options_description modeDesc("Mode change");
@@ -90,7 +91,8 @@ namespace ASI
 
       const bool simpleNames = vm.count("simple");
       const jack_midi_data_t channel = vm["channel"].as<int>();
-      const std::shared_ptr<CommonControls> common(new CommonControls(client, simpleNames, channel));
+      const std::string & piano = vm["piano"].as<std::string>();
+      const std::shared_ptr<CommonControls> common(new CommonControls(client, simpleNames, channel, piano));
 
       if (vm.count("echo"))
       {
