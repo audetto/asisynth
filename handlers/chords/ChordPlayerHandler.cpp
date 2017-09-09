@@ -1,4 +1,4 @@
-#include "chords/ChordPlayerHandler.h"
+#include "handlers/chords/ChordPlayerHandler.h"
 #include "MidiCommands.h"
 #include "MidiUtils.h"
 #include "CommonControls.h"

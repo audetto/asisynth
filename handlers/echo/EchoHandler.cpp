@@ -1,4 +1,4 @@
-#include "echo/EchoHandler.h"
+#include "handlers/echo/EchoHandler.h"
 #include "MidiCommands.h"
 #include "CommonControls.h"
 

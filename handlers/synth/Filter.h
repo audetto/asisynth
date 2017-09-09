@@ -1,6 +1,6 @@
 #pragma once
 
-#include "synth/SynthParameters.h"
+#include "handlers/synth/SynthParameters.h"
 
 #include <vector>
 #include <array>

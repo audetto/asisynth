@@ -1,5 +1,5 @@
-#include "synth/SynthesiserHandler.h"
-#include "synth/IIRFactory.h"
+#include "handlers/synth/SynthesiserHandler.h"
+#include "handlers/synth/IIRFactory.h"
 
 #include "MidiCommands.h"
 #include "CommonControls.h"

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "InputOutputHandler.h"
+#include "handlers/InputOutputHandler.h"
 #include "MidiEvent.h"
-#include "synth/SynthParameters.h"
-#include "synth/Filter.h"
+#include "handlers/synth/SynthParameters.h"
+#include "handlers/synth/Filter.h"
 
 #include <jack/midiport.h>
 #include <list>

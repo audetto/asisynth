@@ -1,4 +1,4 @@
-#include "legato/SuperLegatoHandler.h"
+#include "handlers/legato/SuperLegatoHandler.h"
 #include "MidiCommands.h"
 #include "CommonControls.h"
 

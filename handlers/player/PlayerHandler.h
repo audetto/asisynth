@@ -1,6 +1,6 @@
 #pragma once
 
-#include "InputOutputHandler.h"
+#include "handlers/InputOutputHandler.h"
 #include "MidiEvent.h"
 
 #include <jack/midiport.h>

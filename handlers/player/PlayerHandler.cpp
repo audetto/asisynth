@@ -1,5 +1,5 @@
-#include "player/PlayerHandler.h"
-#include "player/PlayerParameters.h"
+#include "handlers/player/PlayerHandler.h"
+#include "handlers/player/PlayerParameters.h"
 #include "MidiCommands.h"
 #include "CommonControls.h"
 

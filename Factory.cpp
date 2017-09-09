@@ -1,12 +1,12 @@
 #include "CommonControls.h"
-#include "echo/EchoHandler.h"
-#include "mode/ModeHandler.h"
-#include "legato/SuperLegatoHandler.h"
-#include "chords/ChordPlayerHandler.h"
-#include "display/DisplayHandler.h"
-#include "synth/SynthesiserHandler.h"
-#include "player/PlayerHandler.h"
-#include "transport/TransportHandler.h"
+#include "handlers/echo/EchoHandler.h"
+#include "handlers/mode/ModeHandler.h"
+#include "handlers/legato/SuperLegatoHandler.h"
+#include "handlers/chords/ChordPlayerHandler.h"
+#include "handlers/display/DisplayHandler.h"
+#include "handlers/synth/SynthesiserHandler.h"
+#include "handlers/player/PlayerHandler.h"
+#include "handlers/transport/TransportHandler.h"
 
 #include <boost/program_options.hpp>
 #include <iostream>

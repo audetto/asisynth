@@ -7,21 +7,21 @@ add_executable(asisynth
   CommonControls.cpp
   Factory.cpp
   I_JackHandler.cpp
-  InputOutputHandler
   MidiEvent.cpp
   MidiUtils.cpp
-  chords/ChordPlayerHandler.cpp
-  display/DisplayHandler.cpp
-  echo/EchoHandler.cpp
-  legato/SuperLegatoHandler.cpp
-  mode/ModeHandler.cpp
-  player/PlayerParameters.cpp
-  player/PlayerHandler.cpp
+  handlers/InputOutputHandler.cpp
+  handlers/chords/ChordPlayerHandler.cpp
+  handlers/display/DisplayHandler.cpp
+  handlers/echo/EchoHandler.cpp
+  handlers/legato/SuperLegatoHandler.cpp
+  handlers/mode/ModeHandler.cpp
+  handlers/player/PlayerParameters.cpp
+  handlers/player/PlayerHandler.cpp
+  handlers/synth/IIRFactory.cpp
+  handlers/synth/SynthesiserHandler.cpp
+  handlers/synth/SynthParameters.cpp
+  handlers/transport/TransportHandler.cpp
   sounds/Sounds.cpp
-  synth/IIRFactory.cpp
-  synth/SynthesiserHandler.cpp
-  synth/SynthParameters.cpp
-  transport/TransportHandler.cpp
   )
 
 add_library(sigproc

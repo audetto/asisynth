@@ -1,4 +1,4 @@
-#include "display/DisplayHandler.h"
+#include "handlers/display/DisplayHandler.h"
 #include "MidiCommands.h"
 #include "MidiUtils.h"
 #include "CommonControls.h"
