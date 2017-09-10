@@ -4,6 +4,7 @@
 #include "handlers/legato/SuperLegatoHandler.h"
 #include "handlers/chords/ChordPlayerHandler.h"
 #include "handlers/display/DisplayHandler.h"
+#include "handlers/server/ServerHandler.h"
 #include "handlers/synth/SynthesiserHandler.h"
 #include "handlers/player/PlayerHandler.h"
 #include "handlers/transport/TransportHandler.h"
@@ -73,6 +74,12 @@ namespace ASI
       ("player:first", po::value<size_t>()->default_value(0), "First beat");
     desc.add(playerDesc);
 
+    po::options_description serverDesc("Server");
+    serverDesc.add_options()
+      ("server", "Server")
+      ("server:endpoint", po::value<std::string>()->default_value("tcp://localhost:5556"), "ZMQ endpoint");
+    desc.add(serverDesc);
+
     po::options_description transportDesc("Transport");
     transportDesc.add_options()
       ("trans", "Transport");
@@ -140,6 +147,12 @@ namespace ASI
 	const std::string filename = vm["player:file"].as<std::string>();
 	const size_t firstBeat = vm["player:first"].as<size_t>();
 	handlers.push_back(std::make_shared<ASI::Player::PlayerHandler>(common, filename, firstBeat));
+      }
+
+      if (vm.count("server"))
+      {
+	const std::string endpoint = vm["server:endpoint"].as<std::string>();
+	handlers.push_back(std::make_shared<ASI::Server::ServerHandler>(common, endpoint));
       }
 
       if (vm.count("trans"))

@@ -17,6 +17,7 @@ add_executable(asisynth
   handlers/mode/ModeHandler.cpp
   handlers/player/PlayerParameters.cpp
   handlers/player/PlayerHandler.cpp
+  handlers/server/ServerHandler.cpp
   handlers/synth/IIRFactory.cpp
   handlers/synth/SynthesiserHandler.cpp
   handlers/synth/SynthParameters.cpp
@@ -31,6 +32,8 @@ include_directories(${PROJECT_SOURCE_DIR})
 
 target_link_libraries(asisynth jack)
 target_link_libraries(asisynth boost_program_options)
+target_link_libraries(asisynth pthread)
+target_link_libraries(asisynth zmq)
 target_link_libraries(asisynth sigproc)
 
 set_property(TARGET asisynth PROPERTY CXX_STANDARD 11)
