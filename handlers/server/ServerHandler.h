@@ -30,9 +30,7 @@ namespace ASI
 
       void write(const void * message, const size_t size);
 
-       void * getSocket();
-
-    private:
+     private:
 
       const std::shared_ptr<CommonControls> m_common;
 
@@ -42,7 +40,6 @@ namespace ASI
       std::shared_ptr<jack_ringbuffer_t> m_buffMessage;
 
       std::shared_ptr<void> m_context;
-      std::shared_ptr<void> m_socket;
 
       std::thread m_serverThread;
 

@@ -21,15 +21,13 @@ namespace
     }
   }
 
-  void server_thread(ASI::Server::ServerHandler * server)
+  void server_thread(ASI::Server::ServerHandler * server, const std::shared_ptr<void> socket)
   {
-    void * socket = server->getSocket();
-
     while (true)
     {
       zmq_msg_t message;
       zmq_msg_init(&message);
-      int rc = zmq_msg_recv(&message, socket, 0);
+      int rc = zmq_msg_recv(&message, socket.get(), 0);
       if (rc == -1)
       {
 	break;
@@ -62,16 +60,17 @@ namespace ASI
 
       m_context.reset(zmq_ctx_new(), zmq_ctx_destroy);
       throw_errno(bool(m_context));
-      m_socket.reset(zmq_socket(m_context.get(), ZMQ_SUB), zmq_close);
-      throw_errno(bool(m_socket));
 
-      int rc = zmq_connect(m_socket.get(), endpoint.c_str());
+      std::shared_ptr<void> socket(zmq_socket(m_context.get(), ZMQ_SUB), zmq_close);
+      throw_errno(bool(socket));
+
+      int rc = zmq_connect(socket.get(), endpoint.c_str());
       throw_errno(rc == 0);
 
-      rc = zmq_setsockopt(m_socket.get(), ZMQ_SUBSCRIBE, nullptr, 0);
+      rc = zmq_setsockopt(socket.get(), ZMQ_SUBSCRIBE, nullptr, 0);
       throw_errno(rc == 0);
 
-      m_serverThread = std::thread(server_thread, this);
+      m_serverThread = std::thread(server_thread, this, socket);
     }
 
     void ServerHandler::process(const jack_nframes_t nframes)
@@ -91,18 +90,12 @@ namespace ASI
       }
     }
 
-    void * ServerHandler::getSocket()
-    {
-      return m_socket.get();
-    }
-
     void ServerHandler::shutdown()
     {
     }
 
     ServerHandler::~ServerHandler()
     {
-      m_socket.reset();
       m_context.reset();
       try
       {
