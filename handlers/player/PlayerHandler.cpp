@@ -55,7 +55,7 @@ namespace ASI
     PlayerHandler::PlayerHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename, const size_t firstBeat)
       : InputOutputHandler(common), m_firstBeat(firstBeat)
     {
-      m_outputPort = m_common->registerPort("player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
+      m_outputPort = m_common->registerPort("player_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput | JackPortIsTerminal);
 
       const std::shared_ptr<const Melody> melody = loadPlayerMelody(filename);
 

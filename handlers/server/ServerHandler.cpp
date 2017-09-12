@@ -54,7 +54,7 @@ namespace ASI
     ServerHandler::ServerHandler(const std::shared_ptr<CommonControls> & common, const std::string & endpoint)
       : m_common(common)
     {
-      m_outputPort = m_common->registerPort("server_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput);
+      m_outputPort = m_common->registerPort("server_out", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput | JackPortIsTerminal);
 
       // this idea comes from RtMidi
       m_buffSize.reset(jack_ringbuffer_create(JACK_RINGBUFFER_SIZE), jack_ringbuffer_free);

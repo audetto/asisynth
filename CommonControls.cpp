@@ -33,22 +33,22 @@ namespace ASI
 
     if (port_type == JACK_DEFAULT_MIDI_TYPE)
     {
-      if (flags == JackPortIsInput)
+      if (flags & JackPortIsInput)
       {
 	buffer << "midi input " << (++m_midiInputId);
       }
-      else if (flags == JackPortIsOutput)
+      else if (flags & JackPortIsOutput)
       {
 	buffer << "midi output " << (++m_midiOutputId);
       }
     }
     else if (port_type == JACK_DEFAULT_AUDIO_TYPE)
     {
-      if (flags == JackPortIsInput)
+      if (flags & JackPortIsInput)
       {
 	buffer << "audio input " << (++m_audioInputId);
       }
-      else if (flags == JackPortIsOutput)
+      else if (flags & JackPortIsOutput)
       {
 	buffer << "audio output " << (++m_audioOutputId);
       }

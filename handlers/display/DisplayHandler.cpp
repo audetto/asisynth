@@ -15,7 +15,7 @@ namespace ASI
     DisplayHandler::DisplayHandler(const std::shared_ptr<CommonControls> & common, const std::string & filename)
       : m_common(common)
     {
-      m_inputPort = m_common->registerPort("display_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput);
+      m_inputPort = m_common->registerPort("display_in", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput | JackPortIsTerminal);
       m_offset = 0.0;
       m_onTimes.resize(256, 0.0);
 
